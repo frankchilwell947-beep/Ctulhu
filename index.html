@@ -1,0 +1,1998 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Зов Ктулху 7e — Лист Сыщика (WWII)</title>
+    <meta name="description" content="Генератор листа персонажа для НРИ «Зов Ктулху» 7-я редакция. Сеттинг Второй мировой войны.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:wght@400;700&family=UnifrakturCook:wght@700&family=Noto+Serif+JP:wght@400;700&family=Ma+Shan+Zheng&family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+/* ═══════════════════════════════════════════════════════════════
+   RESET & FOUNDATION
+   ═══════════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+    font-size: 16px;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color-adjust: exact;
+}
+
+body {
+    font-family: var(--body-font);
+    font-size: var(--body-size);
+    color: var(--text-primary);
+    background: #1a1a1e;
+    background-image:
+        radial-gradient(ellipse at 20% 50%, rgba(40,30,20,0.5) 0%, transparent 70%),
+        radial-gradient(ellipse at 80% 20%, rgba(30,25,20,0.4) 0%, transparent 60%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    line-height: 1.4;
+    transition: all 0.5s ease;
+    padding-bottom: 40px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CSS CUSTOM PROPERTIES — DEFAULT (overridden per theme)
+   ═══════════════════════════════════════════════════════════════ */
+:root {
+    --sheet-width: 210mm;
+    --sheet-min-height: 297mm;
+    --sheet-padding: 12mm;
+    --t: 0.4s ease;
+    --bg-primary: #e8d5a8;
+    --bg-input: rgba(255,255,255,0.08);
+    --bg-input-focus: rgba(255,255,255,0.22);
+    --text-primary: #1c1a10;
+    --text-secondary: #5a4f3a;
+    --text-label: #3e3425;
+    --accent: #b91c1c;
+    --accent-glow: rgba(185,28,28,0.15);
+    --border: #a08c6a;
+    --border-light: rgba(160,140,106,0.4);
+    --header-font: 'Special Elite', 'Courier New', monospace;
+    --body-font: 'Special Elite', 'Courier New', monospace;
+    --title-size: 22px;
+    --section-size: 12px;
+    --body-size: 11px;
+    --input-size: 11px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TOOLBAR — floating control bar (hidden on print)
+   ═══════════════════════════════════════════════════════════════ */
+.toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    width: 100%;
+    max-width: 820px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 14px 20px;
+    background: linear-gradient(180deg, rgba(20,20,24,0.97) 0%, rgba(28,28,32,0.95) 100%);
+    backdrop-filter: blur(16px) saturate(1.2);
+    -webkit-backdrop-filter: blur(16px) saturate(1.2);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    border-radius: 0 0 16px 16px;
+    margin-bottom: 28px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.03) inset;
+    flex-wrap: wrap;
+}
+
+.toolbar label {
+    color: #9a9a9a;
+    font-family: 'Courier Prime', monospace;
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+}
+
+.toolbar select {
+    padding: 10px 36px 10px 14px;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    background: rgba(255,255,255,0.05);
+    color: #e8e8e8;
+    font-family: 'Courier Prime', monospace;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+}
+
+.toolbar select:hover {
+    border-color: rgba(255,255,255,0.25);
+    background-color: rgba(255,255,255,0.08);
+}
+.toolbar select:focus {
+    border-color: #6a9fd8;
+    box-shadow: 0 0 0 3px rgba(106,159,216,0.15);
+}
+.toolbar select option { background: #1a1a1e; color: #e8e8e8; }
+
+.btn-print {
+    padding: 10px 26px;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #c9763c 0%, #a85d2a 100%);
+    color: #fff;
+    font-family: 'Courier Prime', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    box-shadow: 0 2px 8px rgba(169,93,42,0.3);
+}
+
+.btn-print:hover {
+    background: linear-gradient(135deg, #d98a4a 0%, #b86a30 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(169,93,42,0.4);
+}
+.btn-print:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(169,93,42,0.25);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SHEET — the main A4 document container
+   ═══════════════════════════════════════════════════════════════ */
+.sheet {
+    width: var(--sheet-width);
+    min-height: var(--sheet-min-height);
+    padding: var(--sheet-padding);
+    padding-top: 16mm;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    position: relative;
+    box-shadow:
+        0 2px 4px rgba(0,0,0,0.15),
+        0 12px 40px rgba(0,0,0,0.35),
+        0 30px 80px rgba(0,0,0,0.25),
+        inset 0 0 80px rgba(0,0,0,0.03);
+    overflow: hidden;
+    transition: background-color 0.5s ease;
+}
+
+/* Paper vignette layer */
+.sheet::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   STAMPS — rubber stamp effects
+   ═══════════════════════════════════════════════════════════════ */
+.stamp {
+    position: absolute;
+    z-index: 10;
+    pointer-events: none;
+    font-weight: 700;
+    text-transform: uppercase;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.stamp-main {
+    top: 14mm;
+    right: 10mm;
+    font-size: 15px;
+    padding: 6px 18px;
+    letter-spacing: 3px;
+    line-height: 1.3;
+}
+
+.stamp-secondary {
+    bottom: 22mm;
+    left: 14mm;
+    font-size: 11px;
+    padding: 4px 12px;
+    letter-spacing: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   HEADER
+   ═══════════════════════════════════════════════════════════════ */
+.sheet-header {
+    text-align: center;
+    padding-bottom: 5mm;
+    margin-bottom: 5mm;
+    position: relative;
+    z-index: 2;
+}
+
+.sheet-header h1 {
+    font-family: var(--header-font);
+    font-size: var(--title-size);
+    color: var(--text-primary);
+    letter-spacing: 3px;
+    margin-bottom: 4px;
+    line-height: 1.2;
+    text-transform: uppercase;
+}
+
+.sheet-header .subtitle {
+    font-family: var(--body-font);
+    font-size: 9px;
+    color: var(--text-secondary);
+    letter-spacing: 5px;
+    text-transform: uppercase;
+}
+
+/* Header ornamental line */
+.sheet-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 8%;
+    right: 8%;
+    height: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CORNER MARKS (decorative document corners)
+   ═══════════════════════════════════════════════════════════════ */
+.corner-tl, .corner-tr, .corner-bl, .corner-br {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    z-index: 3;
+    pointer-events: none;
+    opacity: 0.35;
+}
+.corner-tl { top: 6mm; left: 6mm; border-top: 2px solid var(--border); border-left: 2px solid var(--border); }
+.corner-tr { top: 6mm; right: 6mm; border-top: 2px solid var(--border); border-right: 2px solid var(--border); }
+.corner-bl { bottom: 6mm; left: 6mm; border-bottom: 2px solid var(--border); border-left: 2px solid var(--border); }
+.corner-br { bottom: 6mm; right: 6mm; border-bottom: 2px solid var(--border); border-right: 2px solid var(--border); }
+
+/* ═══════════════════════════════════════════════════════════════
+   SECTIONS
+   ═══════════════════════════════════════════════════════════════ */
+.section {
+    position: relative;
+    z-index: 2;
+    margin-bottom: 4.5mm;
+}
+
+.section-title {
+    font-family: var(--header-font);
+    font-size: var(--section-size);
+    color: var(--text-primary);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding-bottom: 2mm;
+    margin-bottom: 3mm;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Decorative line after title text */
+.section-title::after {
+    content: '';
+    flex: 1;
+    height: 1.5px;
+    background: linear-gradient(90deg, var(--border) 0%, transparent 100%);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FORM FIELDS
+   ═══════════════════════════════════════════════════════════════ */
+.field-row {
+    display: grid;
+    gap: 3.5mm;
+    margin-bottom: 2.5mm;
+}
+
+.field-row-2 { grid-template-columns: 1fr 1fr; }
+.field-row-3 { grid-template-columns: 1fr 1fr 1fr; }
+.field-row-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+.field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.field-group label {
+    font-family: var(--body-font);
+    font-size: 8px;
+    color: var(--text-label);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.85;
+}
+
+.field-group input,
+.field-group textarea,
+.field-group select {
+    font-family: var(--body-font);
+    font-size: var(--input-size);
+    color: var(--text-primary);
+    background: var(--bg-input);
+    border: none;
+    border-bottom: 2px solid var(--border);
+    padding: 4px 5px 3px;
+    outline: none;
+    transition: all 0.3s ease;
+    width: 100%;
+    border-radius: 0;
+}
+
+.field-group input:hover,
+.field-group textarea:hover {
+    background: rgba(255,255,255,0.12);
+}
+
+.field-group input:focus,
+.field-group textarea:focus {
+    border-bottom-color: var(--accent);
+    background: var(--bg-input-focus);
+    box-shadow: 0 2px 8px var(--accent-glow);
+}
+
+.field-group textarea {
+    resize: vertical;
+    min-height: 44px;
+    border: 1.5px solid var(--border);
+    padding: 5px 6px;
+    border-radius: 2px;
+    line-height: 1.4;
+}
+
+.field-group textarea:focus {
+    border-color: var(--accent);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CHARACTERISTICS — stat blocks grid
+   ═══════════════════════════════════════════════════════════════ */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2.5mm;
+    margin-bottom: 2mm;
+}
+
+.stat-block {
+    border: 2px solid var(--border);
+    padding: 2.5mm 2mm;
+    text-align: center;
+    background:
+        linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 60%),
+        var(--bg-input);
+    border-radius: 3px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.stat-block::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    border-radius: 2px 2px 0 0;
+}
+
+.stat-block:hover { border-color: var(--accent); }
+.stat-block:hover::before { opacity: 0.6; }
+
+.stat-name {
+    font-family: var(--header-font);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-label);
+    margin-bottom: 3px;
+    font-weight: 700;
+}
+
+.stat-values {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stat-values input {
+    width: 42px;
+    text-align: center;
+    font-family: var(--body-font);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid var(--border);
+    padding: 2px 0;
+    outline: none;
+    border-radius: 0;
+    transition: all 0.3s ease;
+}
+
+.stat-values input:focus {
+    border-bottom-color: var(--accent);
+    color: var(--accent);
+}
+
+/* Number input spinners hidden for cleanliness */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] { -moz-appearance: textfield; }
+
+.stat-derived {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.stat-derived span {
+    font-family: var(--body-font);
+    font-size: 10px;
+    color: var(--text-secondary);
+    min-width: 28px;
+    text-align: center;
+    padding: 2px 4px;
+    border-radius: 3px;
+    background: rgba(0,0,0,0.06);
+    font-weight: 700;
+    border: 1px solid rgba(0,0,0,0.06);
+}
+
+.stat-derived span::before {
+    font-size: 7px;
+    display: block;
+    color: var(--text-secondary);
+    opacity: 0.6;
+    font-weight: 400;
+}
+
+.stat-half::before { content: '½'; }
+.stat-fifth::before { content: '⅕'; }
+
+/* ═══════════════════════════════════════════════════════════════
+   DERIVED STATS
+   ═══════════════════════════════════════════════════════════════ */
+.derived-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 2mm;
+}
+
+.derived-block {
+    border: 2px solid var(--border);
+    padding: 2mm;
+    text-align: center;
+    background: var(--bg-input);
+    border-radius: 3px;
+}
+
+.derived-block .stat-name {
+    font-size: 7px;
+    margin-bottom: 2px;
+    letter-spacing: 1px;
+}
+
+.derived-block .derived-value {
+    font-family: var(--body-font);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--accent);
+    min-height: 20px;
+    line-height: 20px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   VITALS — HP, SAN, MP, LUCK trackers
+   ═══════════════════════════════════════════════════════════════ */
+.vitals-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2.5mm;
+}
+
+.vital-block {
+    border: 2px solid var(--border);
+    padding: 2.5mm 2mm;
+    text-align: center;
+    background:
+        linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%),
+        var(--bg-input);
+    border-radius: 3px;
+    position: relative;
+}
+
+.vital-block .stat-name {
+    font-size: 10px;
+    margin-bottom: 4px;
+    letter-spacing: 1.5px;
+    font-weight: 700;
+}
+
+.vital-inputs {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+}
+
+.vital-inputs input {
+    width: 38px;
+    text-align: center;
+    font-family: var(--body-font);
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid var(--border);
+    padding: 2px 0;
+    outline: none;
+    border-radius: 0;
+    transition: all 0.3s ease;
+}
+
+.vital-inputs input:focus {
+    border-bottom-color: var(--accent);
+    color: var(--accent);
+}
+
+.vital-inputs .separator {
+    font-size: 16px;
+    color: var(--text-secondary);
+    font-weight: 700;
+    opacity: 0.5;
+}
+
+.vital-labels {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    margin-top: 2px;
+}
+
+.vital-labels span {
+    font-family: var(--body-font);
+    font-size: 7px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    letter-spacing: 0.5px;
+    opacity: 0.7;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SKILLS — multi-column list
+   ═══════════════════════════════════════════════════════════════ */
+.skills-container {
+    column-count: 3;
+    column-gap: 4mm;
+    column-rule: 1px solid var(--border-light);
+}
+
+.skill-row {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 3px;
+    border-bottom: 1px dotted var(--border-light);
+    break-inside: avoid;
+    font-size: 9px;
+    line-height: 1.3;
+    transition: background 0.2s ease;
+    border-radius: 1px;
+}
+
+.skill-row:hover {
+    background: rgba(0,0,0,0.04);
+}
+
+.skill-name {
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text-primary);
+    font-weight: 400;
+}
+
+.skill-base {
+    font-size: 7px;
+    color: var(--text-secondary);
+    opacity: 0.55;
+    margin-right: 2px;
+    flex-shrink: 0;
+}
+
+.skill-input {
+    width: 28px;
+    text-align: center;
+    font-family: var(--body-font);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-primary);
+    background: transparent;
+    border: none;
+    border-bottom: 1.5px solid var(--border);
+    padding: 1px 1px;
+    outline: none;
+    flex-shrink: 0;
+    border-radius: 0;
+    transition: all 0.3s ease;
+}
+
+.skill-input:focus {
+    border-bottom-color: var(--accent);
+    background: var(--bg-input-focus);
+}
+
+.skill-calc {
+    display: flex;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.skill-calc span {
+    font-family: var(--body-font);
+    font-size: 7.5px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    min-width: 18px;
+    text-align: center;
+    padding: 1px 2px;
+    background: rgba(0,0,0,0.05);
+    border-radius: 2px;
+    border: 1px solid rgba(0,0,0,0.04);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   WEAPONS TABLE
+   ═══════════════════════════════════════════════════════════════ */
+.weapons-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9px;
+    margin-bottom: 2mm;
+}
+
+.weapons-table th {
+    font-family: var(--header-font);
+    font-size: 7px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-label);
+    border-bottom: 2px solid var(--border);
+    padding: 4px 4px;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.weapons-table td {
+    padding: 3px 3px;
+    border-bottom: 1px solid var(--border-light);
+    vertical-align: middle;
+}
+
+.weapons-table tr:hover td {
+    background: rgba(0,0,0,0.03);
+}
+
+.weapons-table input {
+    width: 100%;
+    font-family: var(--body-font);
+    font-size: 9px;
+    color: var(--text-primary);
+    background: transparent;
+    border: none;
+    border-bottom: 1.5px solid var(--border-light);
+    padding: 2px 3px;
+    outline: none;
+    border-radius: 0;
+    transition: all 0.3s ease;
+}
+
+.weapons-table input:focus {
+    border-bottom-color: var(--accent);
+    background: var(--bg-input-focus);
+}
+
+.btn-add-weapon {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 14px;
+    border: 1.5px dashed var(--border);
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: var(--body-font);
+    font-size: 9px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    margin-top: 2mm;
+}
+
+.btn-add-weapon:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-glow);
+}
+
+.btn-remove-weapon {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 13px;
+    padding: 2px 6px;
+    opacity: 0.35;
+    transition: all 0.3s ease;
+    border-radius: 3px;
+}
+
+.btn-remove-weapon:hover {
+    color: #dc2626;
+    opacity: 1;
+    background: rgba(220,38,38,0.08);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BACKSTORY & INVENTORY
+   ═══════════════════════════════════════════════════════════════ */
+.backstory-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3mm;
+}
+
+.backstory-grid .field-group textarea {
+    min-height: 36px;
+    font-size: 9px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PAGE BREAK
+   ═══════════════════════════════════════════════════════════════ */
+.page-break {
+    break-before: page;
+    page-break-before: always;
+    margin-top: 0;
+    padding-top: 6mm;
+}
+
+
+/* ████████████████████████████████████████████████████████████████
+   THEME: СССР — Soviet Union
+   ████████████████████████████████████████████████████████████████ */
+body.theme-ussr {
+    --bg-primary: #e4d09a;
+    --bg-input: rgba(255,255,255,0.06);
+    --bg-input-focus: rgba(255,255,255,0.18);
+    --text-primary: #1c1a0e;
+    --text-secondary: #5e5038;
+    --text-label: #3a3020;
+    --accent: #b91c1c;
+    --accent-glow: rgba(185,28,28,0.12);
+    --border: #9a845e;
+    --border-light: rgba(154,132,94,0.35);
+    --header-font: 'Special Elite', 'Courier New', monospace;
+    --body-font: 'Special Elite', 'Courier New', monospace;
+}
+
+body.theme-ussr .sheet {
+    background-color: #e4d09a;
+    background-image:
+        /* Stain top-right — coffee ring */
+        radial-gradient(ellipse at 82% 12%, rgba(140,100,40,0.14) 0%, rgba(140,100,40,0.06) 30%, transparent 55%),
+        /* Stain bottom-left */
+        radial-gradient(ellipse at 15% 85%, rgba(120,90,30,0.10) 0%, transparent 40%),
+        /* Aging gradient */
+        radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(100,70,20,0.08) 100%),
+        /* Horizontal fold mark */
+        linear-gradient(180deg, transparent 48.5%, rgba(80,60,20,0.06) 49%, rgba(80,60,20,0.06) 51%, transparent 51.5%),
+        /* Vertical fold mark */
+        linear-gradient(90deg, transparent 49%, rgba(80,60,20,0.04) 49.5%, rgba(80,60,20,0.04) 50.5%, transparent 51%),
+        /* Grain */
+        repeating-conic-gradient(rgba(120,90,40,0.015) 0% 25%, transparent 0% 50%) 0 0 / 4px 4px;
+}
+
+/* Vignette */
+body.theme-ussr .sheet::before {
+    background:
+        radial-gradient(ellipse at center, transparent 50%, rgba(60,40,10,0.18) 100%),
+        /* Edge darkening */
+        linear-gradient(to right, rgba(80,50,10,0.1) 0%, transparent 3%, transparent 97%, rgba(80,50,10,0.1) 100%),
+        linear-gradient(to bottom, rgba(80,50,10,0.08) 0%, transparent 3%, transparent 97%, rgba(80,50,10,0.08) 100%);
+}
+
+/* Stamps */
+body.theme-ussr .stamp {
+    opacity: 0.7;
+    font-family: 'Special Elite', monospace;
+}
+
+body.theme-ussr .stamp-main {
+    border: 3px double #b91c1c;
+    color: #b91c1c;
+    transform: rotate(-12deg);
+    box-shadow:
+        0 0 0 1px rgba(185,28,28,0.15),
+        inset 0 0 12px rgba(185,28,28,0.08),
+        2px 2px 6px rgba(0,0,0,0.1);
+    text-shadow: 0 0 2px rgba(185,28,28,0.2);
+}
+
+body.theme-ussr .stamp-secondary {
+    border: 2px solid #b91c1c;
+    color: #b91c1c;
+    transform: rotate(6deg);
+    box-shadow: 1px 1px 4px rgba(0,0,0,0.08);
+}
+
+/* Header */
+body.theme-ussr .sheet-header h1 { color: #7a1010; }
+body.theme-ussr .sheet-header::after {
+    background: linear-gradient(90deg, transparent, #b91c1c, transparent);
+    height: 2px;
+}
+
+/* Stars */
+body.theme-ussr .sheet-header::before {
+    content: '★  ★  ★';
+    position: absolute;
+    top: -3mm;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    color: #b91c1c;
+    opacity: 0.4;
+    letter-spacing: 4px;
+}
+
+body.theme-ussr .section-title { color: #7a1010; }
+body.theme-ussr .section-title::after { background: linear-gradient(90deg, #b91c1c 0%, transparent 100%); }
+body.theme-ussr .stat-block { border-color: #9a845e; }
+
+/* ████████████████████████████████████████████████████████████████
+   THEME: США — United States
+   ████████████████████████████████████████████████████████████████ */
+body.theme-usa {
+    --bg-primary: #d4be87;
+    --bg-input: rgba(255,255,255,0.07);
+    --bg-input-focus: rgba(255,255,255,0.18);
+    --text-primary: #2a2010;
+    --text-secondary: #6a5d45;
+    --text-label: #4a3f2a;
+    --accent: #1e3a5f;
+    --accent-glow: rgba(30,58,95,0.1);
+    --border: #9a8a65;
+    --border-light: rgba(154,138,101,0.35);
+    --header-font: 'Courier Prime', 'Courier New', monospace;
+    --body-font: 'Courier Prime', 'Courier New', monospace;
+}
+
+body.theme-usa .sheet {
+    background-color: #d4be87;
+    background-image:
+        /* Manila texture — horizontal streaks */
+        repeating-linear-gradient(0deg, transparent, transparent 5px, rgba(180,150,90,0.04) 5px, rgba(180,150,90,0.04) 6px),
+        /* Subtle grain */
+        repeating-conic-gradient(rgba(140,110,60,0.012) 0% 25%, transparent 0% 50%) 0 0 / 3px 3px,
+        /* Aging */
+        radial-gradient(ellipse at 50% 50%, transparent 50%, rgba(100,80,30,0.06) 100%),
+        /* Stain */
+        radial-gradient(ellipse at 70% 80%, rgba(130,100,50,0.08) 0%, transparent 40%);
+    /* Manila folder top edge */
+    border-top: 6px solid #c4a664;
+}
+
+/* Manila tab */
+body.theme-usa .sheet::after {
+    content: 'DOSSIER';
+    position: absolute;
+    top: -24px;
+    right: 28mm;
+    width: 44mm;
+    height: 24px;
+    background: linear-gradient(180deg, #c8aa68 0%, #bfa060 100%);
+    border-radius: 8px 8px 0 0;
+    border: 1px solid #a89050;
+    border-bottom: none;
+    z-index: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Courier Prime', monospace;
+    font-size: 8px;
+    letter-spacing: 3px;
+    color: #6a5a3a;
+    font-weight: 700;
+}
+
+body.theme-usa .sheet::before {
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(80,60,20,0.12) 100%);
+}
+
+/* Stamps */
+body.theme-usa .stamp {
+    opacity: 0.55;
+    font-family: 'Courier Prime', monospace;
+}
+
+body.theme-usa .stamp-main {
+    border: 3px solid #1e3a5f;
+    color: #1e3a5f;
+    transform: rotate(-8deg);
+    box-shadow:
+        0 0 0 1px rgba(30,58,95,0.1),
+        inset 0 0 10px rgba(30,58,95,0.06),
+        2px 2px 8px rgba(0,0,0,0.08);
+}
+
+body.theme-usa .stamp-secondary {
+    border: 2px solid #1e3a5f;
+    color: #1e3a5f;
+    transform: rotate(5deg);
+}
+
+body.theme-usa .sheet-header h1 { color: #1e3a5f; }
+body.theme-usa .sheet-header::after { background: linear-gradient(90deg, transparent, #1e3a5f, transparent); }
+
+body.theme-usa .section-title { color: #1e3a5f; }
+body.theme-usa .section-title::after { background: linear-gradient(90deg, #1e3a5f, transparent); }
+
+/* ████████████████████████████████████████████████████████████████
+   THEME: Третий Рейх — Third Reich
+   ████████████████████████████████████████████████████████████████ */
+body.theme-reich {
+    --bg-primary: #bfc5ae;
+    --bg-input: rgba(255,255,255,0.06);
+    --bg-input-focus: rgba(255,255,255,0.16);
+    --text-primary: #181a14;
+    --text-secondary: #4a4c3e;
+    --text-label: #2a2c22;
+    --accent: #2a2a22;
+    --accent-glow: rgba(42,42,34,0.08);
+    --border: #6a6c58;
+    --border-light: rgba(106,108,88,0.3);
+    --header-font: 'UnifrakturCook', 'EB Garamond', serif;
+    --body-font: 'EB Garamond', 'Georgia', serif;
+    --title-size: 26px;
+    --body-size: 11.5px;
+}
+
+body.theme-reich .sheet {
+    background-color: #bfc5ae;
+    background-image:
+        /* Cold grain */
+        repeating-conic-gradient(rgba(70,80,50,0.015) 0% 25%, transparent 0% 50%) 0 0 / 3px 3px,
+        /* Subtle cross-hatch */
+        repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(60,70,40,0.012) 10px, rgba(60,70,40,0.012) 11px),
+        repeating-linear-gradient(-45deg, transparent, transparent 10px, rgba(60,70,40,0.012) 10px, rgba(60,70,40,0.012) 11px),
+        /* Cool gradient */
+        linear-gradient(160deg, rgba(100,110,80,0.06) 0%, transparent 40%, rgba(100,110,80,0.04) 100%);
+    /* Strict double border */
+    border: 3px double #4a4c38;
+}
+
+body.theme-reich .sheet::before {
+    background: radial-gradient(ellipse at center, transparent 50%, rgba(20,30,10,0.15) 100%);
+}
+
+/* Stamps */
+body.theme-reich .stamp {
+    opacity: 0.5;
+    font-family: 'EB Garamond', serif;
+}
+
+body.theme-reich .stamp-main {
+    border: 3px solid #2a2a22;
+    color: #2a2a22;
+    transform: rotate(-10deg);
+    box-shadow:
+        inset 0 0 8px rgba(30,30,20,0.06),
+        2px 2px 6px rgba(0,0,0,0.1);
+    font-family: 'UnifrakturCook', serif;
+    font-size: 18px;
+    letter-spacing: 2px;
+}
+
+body.theme-reich .stamp-secondary {
+    border: 2px solid #2a2a22;
+    color: #2a2a22;
+    transform: rotate(4deg);
+    font-family: 'EB Garamond', serif;
+}
+
+body.theme-reich .sheet-header h1 {
+    font-size: 28px;
+    letter-spacing: 2px;
+    color: #181a14;
+}
+
+body.theme-reich .sheet-header::after {
+    background: linear-gradient(90deg, transparent, #2a2a22, transparent);
+    height: 3px;
+}
+
+/* Iron Cross ornaments */
+body.theme-reich .sheet-header::before {
+    content: '✠                    ✠';
+    position: absolute;
+    top: -2mm;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 14px;
+    color: #2a2a22;
+    opacity: 0.3;
+    letter-spacing: 4px;
+    white-space: nowrap;
+}
+
+body.theme-reich .section-title {
+    color: #181a14;
+    font-family: 'EB Garamond', serif;
+    font-weight: 700;
+    font-size: 13px;
+}
+body.theme-reich .section-title::after { background: linear-gradient(90deg, #4a4c38, transparent); height: 2px; }
+body.theme-reich .stat-block { border-width: 2px; border-color: #5a5c48; }
+body.theme-reich .corner-tl, body.theme-reich .corner-tr,
+body.theme-reich .corner-bl, body.theme-reich .corner-br {
+    width: 24px;
+    height: 24px;
+    border-width: 3px;
+    border-color: #4a4c38;
+    opacity: 0.5;
+}
+
+/* ████████████████████████████████████████████████████████████████
+   THEME: Япония — Japan
+   ████████████████████████████████████████████████████████████████ */
+body.theme-japan {
+    --bg-primary: #f2ebe0;
+    --bg-input: rgba(0,0,0,0.02);
+    --bg-input-focus: rgba(0,0,0,0.06);
+    --text-primary: #1a1a18;
+    --text-secondary: #6a6a5a;
+    --text-label: #3a3a30;
+    --accent: #8b1a1a;
+    --accent-glow: rgba(139,26,26,0.08);
+    --border: #b0a090;
+    --border-light: rgba(176,160,144,0.3);
+    --header-font: 'Noto Serif JP', 'EB Garamond', serif;
+    --body-font: 'Noto Serif JP', 'EB Garamond', serif;
+    --title-size: 22px;
+    --body-size: 10.5px;
+}
+
+body.theme-japan .sheet {
+    background-color: #f2ebe0;
+    background-image:
+        /* Rice paper fibers — horizontal */
+        repeating-linear-gradient(0deg, transparent, transparent 4px, rgba(160,140,100,0.018) 4px, rgba(160,140,100,0.018) 5px),
+        /* Rice paper fibers — vertical (sparse) */
+        repeating-linear-gradient(90deg, transparent, transparent 8px, rgba(160,140,100,0.008) 8px, rgba(160,140,100,0.008) 9px),
+        /* Warm glow */
+        radial-gradient(ellipse at 50% 30%, rgba(200,180,140,0.1) 0%, transparent 60%);
+    border: none;
+}
+
+body.theme-japan .sheet::before {
+    background: radial-gradient(ellipse at center, transparent 65%, rgba(80,60,30,0.08) 100%);
+}
+
+/* Red seal (hanko) stamp — circular */
+body.theme-japan .stamp-main {
+    border: 3px solid #8b1a1a;
+    color: #8b1a1a;
+    border-radius: 50%;
+    width: 24mm;
+    height: 24mm;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    font-family: 'Noto Serif JP', serif;
+    font-size: 14px;
+    letter-spacing: 1px;
+    line-height: 1.15;
+    text-align: center;
+    transform: rotate(-6deg);
+    box-shadow:
+        inset 0 0 15px rgba(139,26,26,0.1),
+        0 0 0 2px rgba(139,26,26,0.08),
+        2px 2px 8px rgba(0,0,0,0.06);
+    opacity: 0.6;
+}
+
+body.theme-japan .stamp-secondary {
+    border: 2px solid #8b1a1a;
+    color: #8b1a1a;
+    transform: rotate(3deg);
+    font-family: 'Noto Serif JP', serif;
+    opacity: 0.45;
+}
+
+body.theme-japan .stamp { opacity: 1; } /* parent override, children control own */
+
+body.theme-japan .sheet-header h1 {
+    color: #1a1a18;
+    font-weight: 700;
+    letter-spacing: 6px;
+}
+
+/* Brush stroke line under header */
+body.theme-japan .sheet-header::after {
+    background: linear-gradient(90deg,
+        transparent 5%,
+        rgba(139,26,26,0.08) 10%,
+        rgba(139,26,26,0.35) 30%,
+        rgba(139,26,26,0.5) 50%,
+        rgba(139,26,26,0.35) 70%,
+        rgba(139,26,26,0.08) 90%,
+        transparent 95%);
+    height: 3px;
+    border-radius: 2px;
+}
+
+body.theme-japan .section-title {
+    color: #1a1a18;
+    letter-spacing: 3px;
+}
+body.theme-japan .section-title::after { background: linear-gradient(90deg, #b0a090, transparent); height: 1px; }
+
+body.theme-japan .stat-block { border: 1.5px solid #b0a090; }
+body.theme-japan .corner-tl, body.theme-japan .corner-tr,
+body.theme-japan .corner-bl, body.theme-japan .corner-br { opacity: 0.2; border-width: 1px; }
+
+/* ████████████████████████████████████████████████████████████████
+   THEME: Китай — China (KMT)
+   ████████████████████████████████████████████████████████████████ */
+body.theme-china {
+    --bg-primary: #e5dcc8;
+    --bg-input: rgba(255,255,255,0.07);
+    --bg-input-focus: rgba(255,255,255,0.18);
+    --text-primary: #1a1a18;
+    --text-secondary: #5a5a48;
+    --text-label: #2a3a50;
+    --accent: #003a6e;
+    --accent-glow: rgba(0,58,110,0.08);
+    --border: #8a8a72;
+    --border-light: rgba(138,138,114,0.3);
+    --header-font: 'Ma Shan Zheng', 'Noto Serif JP', serif;
+    --body-font: 'EB Garamond', 'Georgia', serif;
+    --title-size: 28px;
+    --body-size: 11.5px;
+}
+
+body.theme-china .sheet {
+    background-color: #e5dcc8;
+    background-image:
+        /* Crumpled paper folds */
+        radial-gradient(ellipse at 25% 35%, rgba(130,120,80,0.1) 0%, transparent 35%),
+        radial-gradient(ellipse at 75% 65%, rgba(130,120,80,0.08) 0%, transparent 30%),
+        radial-gradient(ellipse at 60% 20%, rgba(130,120,80,0.06) 0%, transparent 25%),
+        /* Diagonal fold marks */
+        linear-gradient(135deg, transparent 30%, rgba(100,90,50,0.04) 30.5%, transparent 31%),
+        linear-gradient(225deg, transparent 60%, rgba(100,90,50,0.03) 60.5%, transparent 61%),
+        /* Fine grain */
+        repeating-conic-gradient(rgba(100,90,50,0.012) 0% 25%, transparent 0% 50%) 0 0 / 3px 3px;
+}
+
+body.theme-china .sheet::before {
+    background: radial-gradient(ellipse at center, transparent 50%, rgba(50,40,15,0.15) 100%);
+}
+
+/* KMT Sun watermark */
+body.theme-china .sheet > .watermark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 250px;
+    color: #003a6e;
+    opacity: 0.025;
+    pointer-events: none;
+    z-index: 0;
+    line-height: 1;
+}
+
+/* Stamps */
+body.theme-china .stamp {
+    font-family: 'Ma Shan Zheng', serif;
+    opacity: 0.55;
+}
+
+body.theme-china .stamp-main {
+    border: 3px solid #003a6e;
+    color: #003a6e;
+    transform: rotate(-10deg);
+    font-size: 16px;
+    box-shadow:
+        inset 0 0 10px rgba(0,58,110,0.06),
+        2px 2px 6px rgba(0,0,0,0.08);
+}
+
+body.theme-china .stamp-secondary {
+    border: 2px solid #003a6e;
+    color: #003a6e;
+    transform: rotate(7deg);
+}
+
+body.theme-china .sheet-header h1 {
+    color: #003a6e;
+    font-size: 30px;
+}
+
+body.theme-china .sheet-header::after {
+    background: linear-gradient(90deg, transparent, #003a6e, transparent);
+    height: 2px;
+}
+
+/* Blue-white accent stripe at top */
+body.theme-china .sheet-header::before {
+    content: '';
+    position: absolute;
+    top: -10mm;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: repeating-linear-gradient(90deg, #003a6e 0 8px, #fff 8px 12px);
+    opacity: 0.2;
+}
+
+body.theme-china .section-title { color: #003a6e; }
+body.theme-china .section-title::after { background: linear-gradient(90deg, #003a6e, transparent); }
+
+
+/* ═══════════════════════════════════════════════════════════════
+   PRINT STYLES
+   ═══════════════════════════════════════════════════════════════ */
+@media print {
+    @page {
+        size: A4;
+        margin: 6mm;
+    }
+
+    html, body {
+        background: none !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+    }
+
+    body {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .toolbar { display: none !important; }
+    .btn-add-weapon { display: none !important; }
+    .btn-remove-weapon { display: none !important; }
+    .btn-col { display: none !important; }
+
+    .sheet {
+        width: 100% !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+        padding: 8mm !important;
+        padding-top: 12mm !important;
+        border-radius: 0 !important;
+        break-inside: auto;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    /* Preserve all backgrounds for print */
+    .sheet, .sheet::before, .sheet::after,
+    .stamp, .stamp-main, .stamp-secondary,
+    .stat-block, .vital-block, .derived-block,
+    .stat-derived span, .skill-calc span,
+    .corner-tl, .corner-tr, .corner-bl, .corner-br {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+    }
+
+    .page-break {
+        break-before: page;
+        page-break-before: always;
+    }
+
+    .section { break-inside: avoid; }
+    .stat-block { break-inside: avoid; }
+    .vital-block { break-inside: avoid; }
+    .skill-row { break-inside: avoid; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVE (screen only)
+   ═══════════════════════════════════════════════════════════════ */
+@media screen and (max-width: 820px) {
+    .sheet {
+        width: 100%;
+        min-height: auto;
+        margin: 0 8px 20px;
+        padding: 6mm;
+    }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .derived-grid { grid-template-columns: repeat(3, 1fr); }
+    .vitals-grid { grid-template-columns: repeat(2, 1fr); }
+    .skills-container { column-count: 2; }
+    .field-row-4 { grid-template-columns: 1fr 1fr; }
+    .backstory-grid { grid-template-columns: 1fr; }
+    .toolbar { border-radius: 0; max-width: 100%; }
+}
+
+@media screen and (max-width: 500px) {
+    .skills-container { column-count: 1; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .derived-grid { grid-template-columns: 1fr 1fr; }
+    .field-row-2, .field-row-3 { grid-template-columns: 1fr; }
+}
+    </style>
+</head>
+<body class="theme-ussr">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     TOOLBAR
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="toolbar" id="toolbar">
+    <label for="themeSelect">⚙ Страна:</label>
+    <select id="themeSelect">
+        <option value="theme-ussr">🇷🇺 СССР</option>
+        <option value="theme-usa">🇺🇸 США</option>
+        <option value="theme-reich">🇩🇪 Третий Рейх</option>
+        <option value="theme-japan">🇯🇵 Япония</option>
+        <option value="theme-china">🇨🇳 Китай</option>
+    </select>
+    <button class="btn-print" id="btnPrint" type="button">🖨 Распечатать / Сохранить в PDF</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     CHARACTER SHEET
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="sheet" id="sheet">
+
+    <!-- Corner marks -->
+    <div class="corner-tl"></div>
+    <div class="corner-tr"></div>
+    <div class="corner-bl"></div>
+    <div class="corner-br"></div>
+
+    <!-- KMT watermark (China only — shown via JS) -->
+    <div class="watermark" id="watermark" style="display:none;">☀</div>
+
+    <!-- STAMPS -->
+    <div class="stamp stamp-main" id="stampMain">СОВЕРШЕННО СЕКРЕТНО</div>
+    <div class="stamp stamp-secondary" id="stampSecondary">ЭКЗ. №___</div>
+
+    <!-- HEADER -->
+    <header class="sheet-header">
+        <h1 id="sheetTitle">Зов Ктулху — Лист Сыщика</h1>
+        <div class="subtitle" id="sheetSubtitle">Вторая мировая война ◆ 7-я редакция</div>
+    </header>
+
+    <!-- ==================== ЛИЧНОЕ ДЕЛО ==================== -->
+    <div class="section">
+        <div class="section-title">Личное дело</div>
+        <div class="field-row field-row-2">
+            <div class="field-group">
+                <label for="charName">Имя персонажа</label>
+                <input type="text" id="charName" placeholder="—">
+            </div>
+            <div class="field-group">
+                <label for="charPlayer">Имя игрока</label>
+                <input type="text" id="charPlayer" placeholder="—">
+            </div>
+        </div>
+        <div class="field-row field-row-4">
+            <div class="field-group">
+                <label for="charProfession">Профессия</label>
+                <input type="text" id="charProfession" placeholder="—">
+            </div>
+            <div class="field-group">
+                <label for="charAge">Возраст</label>
+                <input type="number" id="charAge" min="15" max="99" placeholder="—">
+            </div>
+            <div class="field-group">
+                <label for="charGender">Пол</label>
+                <input type="text" id="charGender" placeholder="—">
+            </div>
+            <div class="field-group">
+                <label for="charBirthplace">Место рождения</label>
+                <input type="text" id="charBirthplace" placeholder="—">
+            </div>
+        </div>
+        <div class="field-row field-row-3">
+            <div class="field-group">
+                <label for="charResidence">Место жительства</label>
+                <input type="text" id="charResidence" placeholder="—">
+            </div>
+            <div class="field-group">
+                <label for="charRank">Звание / Должность</label>
+                <input type="text" id="charRank" placeholder="—">
+            </div>
+            <div class="field-group">
+                <label for="charUnit">Подразделение</label>
+                <input type="text" id="charUnit" placeholder="—">
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== ХАРАКТЕРИСТИКИ ==================== -->
+    <div class="section">
+        <div class="section-title">Характеристики</div>
+        <div class="stats-grid" id="statsGrid">
+            <!-- Generated by JS -->
+        </div>
+    </div>
+
+    <!-- ==================== ПРОИЗВОДНЫЕ ==================== -->
+    <div class="section">
+        <div class="section-title">Производные показатели</div>
+        <div class="derived-grid" id="derivedGrid">
+            <div class="derived-block">
+                <div class="stat-name">Бросок урона</div>
+                <div class="derived-value" id="derivedDB">—</div>
+            </div>
+            <div class="derived-block">
+                <div class="stat-name">Телосложение</div>
+                <div class="derived-value" id="derivedBuild">—</div>
+            </div>
+            <div class="derived-block">
+                <div class="stat-name">Движение</div>
+                <div class="derived-value" id="derivedMove">—</div>
+            </div>
+            <div class="derived-block">
+                <div class="stat-name">Макс. здоровье</div>
+                <div class="derived-value" id="derivedHPMax">—</div>
+            </div>
+            <div class="derived-block">
+                <div class="stat-name">Макс. магия</div>
+                <div class="derived-value" id="derivedMPMax">—</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== ЖИЗНЕННЫЕ ПОКАЗАТЕЛИ ==================== -->
+    <div class="section">
+        <div class="section-title">Жизненные показатели</div>
+        <div class="vitals-grid">
+            <div class="vital-block">
+                <div class="stat-name">Здоровье</div>
+                <div class="vital-inputs">
+                    <input type="number" id="hpCur" min="0" placeholder="—">
+                    <span class="separator">/</span>
+                    <input type="number" id="hpMax" min="0" placeholder="—">
+                </div>
+                <div class="vital-labels"><span>текущ.</span><span>макс.</span></div>
+            </div>
+            <div class="vital-block">
+                <div class="stat-name">Рассудок</div>
+                <div class="vital-inputs">
+                    <input type="number" id="sanCur" min="0" max="99" placeholder="—">
+                    <span class="separator">/</span>
+                    <input type="number" id="sanMax" min="0" max="99" placeholder="—">
+                </div>
+                <div class="vital-labels"><span>текущ.</span><span>макс.</span></div>
+            </div>
+            <div class="vital-block">
+                <div class="stat-name">Магия</div>
+                <div class="vital-inputs">
+                    <input type="number" id="mpCur" min="0" placeholder="—">
+                    <span class="separator">/</span>
+                    <input type="number" id="mpMax" min="0" placeholder="—">
+                </div>
+                <div class="vital-labels"><span>текущ.</span><span>макс.</span></div>
+            </div>
+            <div class="vital-block">
+                <div class="stat-name">Удача</div>
+                <div class="vital-inputs">
+                    <input type="number" id="luckCur" min="0" max="99" placeholder="—">
+                    <span class="separator">/</span>
+                    <input type="number" id="luckMax" min="0" max="99" placeholder="—">
+                </div>
+                <div class="vital-labels"><span>текущ.</span><span>макс.</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== НАВЫКИ ==================== -->
+    <div class="section">
+        <div class="section-title">Навыки</div>
+        <div class="skills-container" id="skillsContainer">
+            <!-- Generated by JS -->
+        </div>
+    </div>
+
+    <!-- ==================== PAGE 2 ==================== -->
+    <div class="page-break"></div>
+
+    <!-- ==================== ОРУЖИЕ ==================== -->
+    <div class="section">
+        <div class="section-title">Оружие и Снаряжение</div>
+        <table class="weapons-table" id="weaponsTable">
+            <thead>
+                <tr>
+                    <th style="width:22%">Оружие</th>
+                    <th style="width:8%">Навык %</th>
+                    <th style="width:12%">Урон</th>
+                    <th style="width:10%">Дальность</th>
+                    <th style="width:7%">Атаки</th>
+                    <th style="width:9%">Патроны</th>
+                    <th style="width:10%">Неиспр.</th>
+                    <th style="width:18%">Примечание</th>
+                    <th style="width:4%" class="btn-col"></th>
+                </tr>
+            </thead>
+            <tbody id="weaponsBody">
+                <!-- Generated by JS -->
+            </tbody>
+        </table>
+        <button class="btn-add-weapon" id="btnAddWeapon" type="button">+ Добавить оружие</button>
+    </div>
+
+    <!-- ==================== БИОГРАФИЯ И ЗАМЕТКИ ==================== -->
+    <div class="section">
+        <div class="section-title">Биография и психология</div>
+        <div class="backstory-grid">
+            <div class="field-group">
+                <label for="bioDesc">Биография / предыстория</label>
+                <textarea id="bioDesc" rows="4" placeholder="Краткое описание прошлого персонажа..."></textarea>
+            </div>
+            <div class="field-group">
+                <label for="bioTraits">Черты характера / идеология</label>
+                <textarea id="bioTraits" rows="4" placeholder="Идеалы, привязанности, значимые люди..."></textarea>
+            </div>
+            <div class="field-group">
+                <label for="bioScars">Шрамы и увечья</label>
+                <textarea id="bioScars" rows="3" placeholder="Физические и ментальные шрамы..."></textarea>
+            </div>
+            <div class="field-group">
+                <label for="bioPhobias">Фобии и мании</label>
+                <textarea id="bioPhobias" rows="3" placeholder="Страхи, навязчивые идеи..."></textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== ИНВЕНТАРЬ ==================== -->
+    <div class="section">
+        <div class="section-title">Инвентарь и ресурсы</div>
+        <div class="field-row field-row-2">
+            <div class="field-group">
+                <label for="invGear">Снаряжение</label>
+                <textarea id="invGear" rows="5" placeholder="Личные вещи, оборудование..."></textarea>
+            </div>
+            <div class="field-group">
+                <label for="invNotes">Заметки / улики</label>
+                <textarea id="invNotes" rows="5" placeholder="Артефакты, документы, находки..."></textarea>
+            </div>
+        </div>
+        <div class="field-row field-row-3" style="margin-top:2mm">
+            <div class="field-group">
+                <label for="invCash">Наличность</label>
+                <input type="text" id="invCash" placeholder="—">
+            </div>
+            <div class="field-group">
+                <label for="invAssets">Активы / Имущество</label>
+                <input type="text" id="invAssets" placeholder="—">
+            </div>
+            <div class="field-group">
+                <label for="invContacts">Контакты / Связные</label>
+                <input type="text" id="invContacts" placeholder="—">
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== ЗАКЛИНАНИЯ ==================== -->
+    <div class="section">
+        <div class="section-title">Заклинания и артефакты</div>
+        <div class="field-group">
+            <textarea id="spells" rows="3" placeholder="Известные заклинания, формулы, ритуалы..."></textarea>
+        </div>
+    </div>
+
+</div><!-- /.sheet -->
+
+<!-- ═══════════════════════════════════════════════════════════════
+     JAVASCRIPT
+     ═══════════════════════════════════════════════════════════════ -->
+<script>
+(function() {
+    'use strict';
+
+    /* ========================================================
+       DATA: Characteristics
+       ======================================================== */
+    const STATS = [
+        { id: 'str', name: 'СИЛ', full: 'Сила' },
+        { id: 'dex', name: 'ЛВК', full: 'Ловкость' },
+        { id: 'int', name: 'ИНТ', full: 'Интеллект' },
+        { id: 'con', name: 'ВЫН', full: 'Выносливость' },
+        { id: 'app', name: 'ШАР', full: 'Внешность' },
+        { id: 'pow', name: 'МОЩ', full: 'Мощь' },
+        { id: 'siz', name: 'ТЕЛ', full: 'Телосложение' },
+        { id: 'edu', name: 'ОБР', full: 'Образование' }
+    ];
+
+    /* ========================================================
+       DATA: Skills (alphabetical in Russian)
+       ======================================================== */
+    const SKILLS = [
+        { name: 'Антропология', base: 1 },
+        { name: 'Археология', base: 1 },
+        { name: 'Библиотековедение', base: 20 },
+        { name: 'Бухгалтерия', base: 5 },
+        { name: 'Верховая езда', base: 5 },
+        { name: 'Внимание', base: 25 },
+        { name: 'Военное дело', base: 1 },
+        { name: 'Вождение', base: 20 },
+        { name: 'Выживание', base: 10 },
+        { name: 'Естествознание', base: 10 },
+        { name: 'Запугивание', base: 15 },
+        { name: 'Искусство/Ремесло', base: 5, editable: true },
+        { name: 'История', base: 5 },
+        { name: 'Красноречие', base: 5 },
+        { name: 'Кредитоспособность', base: 0 },
+        { name: 'Лазание', base: 20 },
+        { name: 'Ловкость рук', base: 10 },
+        { name: 'Маскировка', base: 5 },
+        { name: 'Медицина', base: 1 },
+        { name: 'Метание', base: 20 },
+        { name: 'Механика', base: 10 },
+        { name: 'Мифы Ктулху', base: 0 },
+        { name: 'Навигация', base: 10 },
+        { name: 'Наука (____)', base: 1, editable: true },
+        { name: 'Обаяние', base: 15 },
+        { name: 'Огнестр.: пистолет', base: 20 },
+        { name: 'Огнестр.: винтовка', base: 25 },
+        { name: 'Оккультизм', base: 5 },
+        { name: 'Первая помощь', base: 30 },
+        { name: 'Пилотирование', base: 1 },
+        { name: 'Плавание', base: 20 },
+        { name: 'Подрывное дело', base: 1 },
+        { name: 'Право', base: 5 },
+        { name: 'Прыжки', base: 20 },
+        { name: 'Психоанализ', base: 1 },
+        { name: 'Психология', base: 10 },
+        { name: 'Родной язык', base: 0, special: 'edu' },
+        { name: 'Рукопашный бой', base: 25 },
+        { name: 'Скрытность', base: 20 },
+        { name: 'Следопытство', base: 10 },
+        { name: 'Слесарное дело', base: 1 },
+        { name: 'Слух', base: 20 },
+        { name: 'Тяжёлая техника', base: 1 },
+        { name: 'Убеждение', base: 10 },
+        { name: 'Уклонение', base: 0, special: 'dex_half' },
+        { name: 'Электроремонт', base: 10 },
+        { name: 'Язык (____)', base: 1, editable: true },
+    ];
+
+    /* ========================================================
+       THEME STAMPS CONFIG
+       ======================================================== */
+    const STAMP_CONFIG = {
+        'theme-ussr': {
+            main: 'СОВЕРШЕННО\nСЕКРЕТНО',
+            secondary: 'ЭКЗ. №___',
+            title: 'Зов Ктулху — Лист Сыщика',
+            subtitle: 'Вторая мировая война ◆ 7-я редакция',
+            watermark: false
+        },
+        'theme-usa': {
+            main: 'CLASSIFIED',
+            secondary: 'COPY №___',
+            title: 'Call of Cthulhu — Investigator Sheet',
+            subtitle: 'World War II ◆ 7th Edition',
+            watermark: false
+        },
+        'theme-reich': {
+            main: 'GEHEIM',
+            secondary: 'AKTE Nr.___',
+            title: 'Ruf des Cthulhu — Ermittlerbogen',
+            subtitle: 'Zweiter Weltkrieg ◆ 7. Ausgabe',
+            watermark: false
+        },
+        'theme-japan': {
+            main: '極\n秘',
+            secondary: '文書番号___',
+            title: 'クトゥルフの呼び声 — 探索者シート',
+            subtitle: '第二次世界大戦 ◆ 第7版',
+            watermark: false
+        },
+        'theme-china': {
+            main: '機密文件',
+            secondary: '檔案號___',
+            title: '克蘇魯的呼喚 — 調查員檔案',
+            subtitle: '第二次世界大戰 ◆ 第七版',
+            watermark: true
+        }
+    };
+
+    /* ========================================================
+       GENERATE: Characteristics Grid
+       ======================================================== */
+    const statsGrid = document.getElementById('statsGrid');
+
+    STATS.forEach(stat => {
+        const block = document.createElement('div');
+        block.className = 'stat-block';
+        block.innerHTML = `
+            <div class="stat-name" title="${stat.full}">${stat.name}</div>
+            <div class="stat-values">
+                <input type="number" id="stat_${stat.id}" min="0" max="99"
+                       data-stat="${stat.id}" placeholder="—"
+                       aria-label="${stat.full}">
+            </div>
+            <div class="stat-derived">
+                <span class="stat-half" id="stat_${stat.id}_half">—</span>
+                <span class="stat-fifth" id="stat_${stat.id}_fifth">—</span>
+            </div>
+        `;
+        statsGrid.appendChild(block);
+    });
+
+    /* ========================================================
+       GENERATE: Skills List
+       ======================================================== */
+    const skillsContainer = document.getElementById('skillsContainer');
+
+    SKILLS.forEach((skill, index) => {
+        const row = document.createElement('div');
+        row.className = 'skill-row';
+
+        let baseLabel = skill.base + '%';
+        if (skill.special === 'edu') baseLabel = 'ОБР';
+        if (skill.special === 'dex_half') baseLabel = 'ЛВК/2';
+
+        row.innerHTML = `
+            <span class="skill-name" title="${skill.name}">${skill.name}</span>
+            <span class="skill-base">(${baseLabel})</span>
+            <input type="number" class="skill-input" id="skill_${index}"
+                   min="0" max="99" data-skill-index="${index}"
+                   placeholder="—" aria-label="${skill.name}">
+            <div class="skill-calc">
+                <span id="skill_${index}_half" title="½">—</span>
+                <span id="skill_${index}_fifth" title="⅕">—</span>
+            </div>
+        `;
+        skillsContainer.appendChild(row);
+    });
+
+    /* ========================================================
+       GENERATE: Weapon Rows
+       ======================================================== */
+    const weaponsBody = document.getElementById('weaponsBody');
+
+    function createWeaponRow() {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><input type="text" placeholder="—" aria-label="Оружие"></td>
+            <td><input type="number" min="0" max="99" placeholder="—" aria-label="Навык"></td>
+            <td><input type="text" placeholder="—" aria-label="Урон"></td>
+            <td><input type="text" placeholder="—" aria-label="Дальность"></td>
+            <td><input type="number" min="1" max="9" placeholder="—" aria-label="Атаки"></td>
+            <td><input type="text" placeholder="—" aria-label="Патроны"></td>
+            <td><input type="text" placeholder="—" aria-label="Неисправность"></td>
+            <td><input type="text" placeholder="—" aria-label="Примечание"></td>
+            <td class="btn-col"><button type="button" class="btn-remove-weapon" title="Удалить">✕</button></td>
+        `;
+        tr.querySelector('.btn-remove-weapon').addEventListener('click', () => {
+            if (weaponsBody.children.length > 1) {
+                tr.style.opacity = '0';
+                tr.style.transform = 'translateX(-10px)';
+                tr.style.transition = 'all 0.25s ease';
+                setTimeout(() => tr.remove(), 250);
+            }
+        });
+        weaponsBody.appendChild(tr);
+    }
+
+    // Initial weapon rows
+    for (let i = 0; i < 3; i++) createWeaponRow();
+
+    document.getElementById('btnAddWeapon').addEventListener('click', createWeaponRow);
+
+    /* ========================================================
+       AUTO-CALC: Half and Fifth values
+       ======================================================== */
+    function calcHalfFifth(value) {
+        const v = parseInt(value, 10);
+        if (isNaN(v) || v < 0) return { half: '—', fifth: '—' };
+        return {
+            half: Math.floor(v / 2),
+            fifth: Math.floor(v / 5)
+        };
+    }
+
+    // Stats auto-calc
+    STATS.forEach(stat => {
+        const input = document.getElementById(`stat_${stat.id}`);
+        const halfEl = document.getElementById(`stat_${stat.id}_half`);
+        const fifthEl = document.getElementById(`stat_${stat.id}_fifth`);
+
+        input.addEventListener('input', () => {
+            const { half, fifth } = calcHalfFifth(input.value);
+            halfEl.textContent = half;
+            fifthEl.textContent = fifth;
+            updateDerived();
+            updateSpecialSkills();
+        });
+    });
+
+    // Skills auto-calc
+    SKILLS.forEach((skill, index) => {
+        const input = document.getElementById(`skill_${index}`);
+        const halfEl = document.getElementById(`skill_${index}_half`);
+        const fifthEl = document.getElementById(`skill_${index}_fifth`);
+
+        input.addEventListener('input', () => {
+            const { half, fifth } = calcHalfFifth(input.value);
+            halfEl.textContent = half;
+            fifthEl.textContent = fifth;
+        });
+    });
+
+    /* ========================================================
+       DERIVED STATS CALCULATION
+       ======================================================== */
+    function getStatValue(id) {
+        const el = document.getElementById(`stat_${id}`);
+        const v = parseInt(el.value, 10);
+        return isNaN(v) ? 0 : v;
+    }
+
+    function updateDerived() {
+        const str = getStatValue('str');
+        const con = getStatValue('con');
+        const siz = getStatValue('siz');
+        const dex = getStatValue('dex');
+        const pow = getStatValue('pow');
+
+        // HP Max = floor((CON + SIZ) / 10)
+        const hpMax = (con > 0 && siz > 0) ? Math.floor((con + siz) / 10) : null;
+        document.getElementById('derivedHPMax').textContent = hpMax !== null ? hpMax : '—';
+
+        // MP Max = floor(POW / 5)
+        const mpMax = pow > 0 ? Math.floor(pow / 5) : null;
+        document.getElementById('derivedMPMax').textContent = mpMax !== null ? mpMax : '—';
+
+        // Damage Bonus and Build based on STR + SIZ
+        const strSiz = str + siz;
+        let db = '—', build = '—';
+        if (str > 0 && siz > 0) {
+            if (strSiz >= 2 && strSiz <= 64) { db = '−2'; build = '−2'; }
+            if (strSiz >= 65 && strSiz <= 84) { db = '−1'; build = '−1'; }
+            if (strSiz >= 85 && strSiz <= 124) { db = '0'; build = '0'; }
+            if (strSiz >= 125 && strSiz <= 164) { db = '+1к4'; build = '+1'; }
+            if (strSiz >= 165 && strSiz <= 204) { db = '+1к6'; build = '+2'; }
+            if (strSiz >= 205 && strSiz <= 284) { db = '+2к6'; build = '+3'; }
+            if (strSiz >= 285 && strSiz <= 364) { db = '+3к6'; build = '+4'; }
+            if (strSiz >= 365) { db = '+4к6'; build = '+5'; }
+        }
+        document.getElementById('derivedDB').textContent = db;
+        document.getElementById('derivedBuild').textContent = build;
+
+        // Movement
+        let move = '—';
+        if (dex > 0 && str > 0 && siz > 0) {
+            if (dex < siz && str < siz) move = 7;
+            else if (dex > siz && str > siz) move = 9;
+            else move = 8;
+        }
+        document.getElementById('derivedMove').textContent = move;
+
+        // Auto-fill HP Max and MP Max into vital fields if empty
+        if (hpMax !== null) {
+            const hpMaxInput = document.getElementById('hpMax');
+            if (!hpMaxInput.value) hpMaxInput.placeholder = hpMax;
+        }
+        if (mpMax !== null) {
+            const mpMaxInput = document.getElementById('mpMax');
+            if (!mpMaxInput.value) mpMaxInput.placeholder = mpMax;
+        }
+        // SAN starting = POW
+        if (pow > 0) {
+            const sanCurInput = document.getElementById('sanCur');
+            if (!sanCurInput.value) sanCurInput.placeholder = pow;
+            const sanMaxInput = document.getElementById('sanMax');
+            if (!sanMaxInput.value) sanMaxInput.placeholder = 99;
+        }
+    }
+
+    /* ========================================================
+       SPECIAL SKILLS (Dodge = DEX/2, Native Language = EDU)
+       ======================================================== */
+    function updateSpecialSkills() {
+        const dex = getStatValue('dex');
+        const edu = getStatValue('edu');
+
+        SKILLS.forEach((skill, index) => {
+            const input = document.getElementById(`skill_${index}`);
+            if (skill.special === 'dex_half' && dex > 0 && !input.value) {
+                input.placeholder = Math.floor(dex / 2);
+            }
+            if (skill.special === 'edu' && edu > 0 && !input.value) {
+                input.placeholder = edu;
+            }
+        });
+    }
+
+    /* ========================================================
+       THEME SWITCHING
+       ======================================================== */
+    const themeSelect = document.getElementById('themeSelect');
+    const stampMain = document.getElementById('stampMain');
+    const stampSecondary = document.getElementById('stampSecondary');
+    const sheetTitle = document.getElementById('sheetTitle');
+    const sheetSubtitle = document.getElementById('sheetSubtitle');
+    const watermark = document.getElementById('watermark');
+
+    function applyTheme(theme) {
+        document.body.className = '';
+        document.body.classList.add(theme);
+
+        const config = STAMP_CONFIG[theme];
+        if (config) {
+            stampMain.textContent = config.main;
+            stampSecondary.textContent = config.secondary;
+            sheetTitle.textContent = config.title;
+            sheetSubtitle.textContent = config.subtitle;
+            watermark.style.display = config.watermark ? 'block' : 'none';
+        }
+    }
+
+    themeSelect.addEventListener('change', (e) => {
+        applyTheme(e.target.value);
+    });
+
+    // Apply initial theme
+    applyTheme('theme-ussr');
+
+    /* ========================================================
+       PRINT
+       ======================================================== */
+    document.getElementById('btnPrint').addEventListener('click', () => {
+        window.print();
+    });
+
+    /* ========================================================
+       INIT
+       ======================================================== */
+    updateDerived();
+    updateSpecialSkills();
+
+})();
+</script>
+</body>
+</html>
