@@ -1279,11 +1279,10 @@ body.theme-china .section-title::after { background: linear-gradient(90deg, #003
 @media print {
     @page {
         size: A4;
-        margin: 10mm;
+        margin: 0;
     }
 
     html, body {
-        background: none !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
         color-adjust: exact !important;
@@ -1293,7 +1292,18 @@ body.theme-china .section-title::after { background: linear-gradient(90deg, #003
         padding: 0 !important;
         margin: 0 !important;
         display: block !important;
+        background-color: #e4d09a !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
     }
+
+    /* Apply theme paper background to body so empty parts of pages are not white */
+    body.theme-ussr { background-color: #e4d09a !important; }
+    body.theme-usa { background-color: #d4be87 !important; }
+    body.theme-reich { background-color: #bfc5ae !important; }
+    body.theme-japan { background-color: #f2ebe0 !important; }
+    body.theme-china { background-color: #e5dcc8 !important; }
+    body.dark-mode { background-color: #e4d09a !important; }
 
     /* Hide ALL interactive/non-print elements */
     .toolbar, .btn-add-weapon, .btn-remove-weapon, .btn-col,
@@ -1313,14 +1323,14 @@ body.theme-china .section-title::after { background: linear-gradient(90deg, #003
         display: none !important;
     }
 
-    /* Sheet: remove min-height, full width, compact padding */
+    /* Sheet: add padding for margins, keep paper background */
     .sheet {
         width: 100% !important;
         min-height: auto !important;
         box-shadow: none !important;
         margin: 0 !important;
-        padding: 0 !important;
-        padding-top: 6mm !important;
+        padding: 12mm !important;
+        padding-top: 14mm !important;
         border-radius: 0 !important;
         break-inside: auto;
         overflow: visible !important;
@@ -1413,12 +1423,12 @@ body.theme-china .section-title::after { background: linear-gradient(90deg, #003
         print-color-adjust: exact !important;
     }
 
-    /* Theme backgrounds must print */
-    body.theme-ussr .sheet,
-    body.theme-usa .sheet,
-    body.theme-reich .sheet,
-    body.theme-japan .sheet,
-    body.theme-china .sheet {
+    /* Theme backgrounds must print — both body and sheet */
+    body.theme-ussr, body.theme-ussr .sheet,
+    body.theme-usa, body.theme-usa .sheet,
+    body.theme-reich, body.theme-reich .sheet,
+    body.theme-japan, body.theme-japan .sheet,
+    body.theme-china, body.theme-china .sheet {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
         color-adjust: exact !important;
