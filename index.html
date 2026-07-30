@@ -613,6 +613,34 @@ input[type="number"] { -moz-appearance: textfield; }
     background: rgba(0,0,0,0.04);
 }
 
+/* Invest checkbox (вкачиваем) */
+.skill-invest {
+    flex-shrink: 0;
+    width: 13px;
+    height: 13px;
+    cursor: pointer;
+    accent-color: var(--accent);
+    margin: 0;
+    opacity: 0.4;
+    transition: opacity 0.2s ease;
+}
+.skill-invest:hover { opacity: 0.8; }
+.skill-invest:checked { opacity: 1; }
+
+/* Highlight invested skills */
+.skill-row.invested {
+    background: rgba(201,118,60,0.08);
+    border-left: 2px solid var(--accent);
+    padding-left: 5px;
+}
+.skill-row.invested .skill-name {
+    font-weight: 700;
+    color: var(--accent);
+}
+.skill-row.invested .skill-name-input {
+    color: var(--accent);
+}
+
 .skill-name {
     flex: 1;
     min-width: 0;
@@ -1310,7 +1338,7 @@ body.theme-china .section-title::after { background: linear-gradient(90deg, #003
     .dice-fab, .dice-panel, .toast-container,
     .slot-row, .save-status, .sound-toggle, .dark-toggle, .kbd-hint,
     .modal-overlay, .dmg-popover, .atk-popover, .malf-popover,
-    .skill-check-btn, .skill-remove-btn, #btnAddSkill,
+    .skill-check-btn, .skill-remove-btn, #btnAddSkill, .skill-invest,
     .weapon-roll-btn, .weapon-atk-btn, .weapon-malf-btn,
     .equip-pack-row, .btn-load-pack,
     .luck-spend-row, .btn-force-bout, .san-loss-buttons, .san-recovery-info,
@@ -5285,6 +5313,7 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
             : `<button type="button" class="skill-check-btn" data-skill-check="${index}" title="Бросок проверки d100">🎲</button>`;
 
         row.innerHTML = `
+            <input type="checkbox" class="skill-invest" id="skill_${index}_invest" data-skill-invest="${index}" title="Вкачиваем">
             ${nameHTML}
             <span class="skill-base">(${baseLabel})</span>
             <input type="number" class="skill-input" id="skill_${index}"
@@ -5299,20 +5328,55 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
         return row;
     }
 
+    // Save current skill values & invest state before re-render, restore after
+    let _skillValuesCache = {};
+    let _skillInvestCache = {};
+    function _saveSkillState() {
+        _skillValuesCache = {};
+        _skillInvestCache = {};
+        document.querySelectorAll('.skill-input').forEach(inp => {
+            if (inp.dataset.skillIndex !== undefined) _skillValuesCache[inp.dataset.skillIndex] = inp.value;
+        });
+        document.querySelectorAll('.skill-invest').forEach(cb => {
+            if (cb.dataset.skillInvest !== undefined) _skillInvestCache[cb.dataset.skillInvest] = cb.checked;
+        });
+    }
+    function _restoreSkillState() {
+        Object.keys(_skillValuesCache).forEach(idx => {
+            const inp = document.getElementById(`skill_${idx}`);
+            if (inp) {
+                inp.value = _skillValuesCache[idx];
+                const { half, fifth } = calcHalfFifth(inp.value);
+                const h = document.getElementById(`skill_${idx}_half`);
+                const f = document.getElementById(`skill_${idx}_fifth`);
+                if (h) h.textContent = half;
+                if (f) f.textContent = fifth;
+            }
+        });
+        Object.keys(_skillInvestCache).forEach(idx => {
+            const cb = document.getElementById(`skill_${idx}_invest`);
+            if (cb) {
+                cb.checked = _skillInvestCache[idx];
+                const row = cb.closest('.skill-row');
+                if (row) row.classList.toggle('invested', cb.checked);
+            }
+        });
+        updateSkillHighlight();
+    }
+
     function renderAllSkills() {
+        _saveSkillState();
         skillsContainer.innerHTML = '';
         SKILLS.forEach((skill, index) => {
             skillsContainer.appendChild(renderSkillRow(skill, index, false));
         });
-        // Custom skills use indices starting at SKILLS.length
         customSkills.forEach((skill, i) => {
             const idx = SKILLS.length + i;
             const row = renderSkillRow({ ...skill, special: null }, idx, true);
             skillsContainer.appendChild(row);
         });
-        // Re-attach auto-calc listeners for all skill inputs
         attachSkillListeners();
-        updateSkillHighlight();
+        _restoreSkillState();
     }
 
     SKILLS.forEach((skill, index) => {
@@ -5320,7 +5384,6 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
     });
 
     function attachSkillListeners() {
-        // Auto-calc for skill inputs
         document.querySelectorAll('.skill-input').forEach(inp => {
             if (inp.dataset.attached) return;
             inp.dataset.attached = '1';
@@ -5332,6 +5395,16 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
                 if (halfEl) halfEl.textContent = half;
                 if (fifthEl) fifthEl.textContent = fifth;
                 updateSkillHighlight();
+            });
+        });
+        // Invest checkbox listener
+        document.querySelectorAll('.skill-invest').forEach(cb => {
+            if (cb.dataset.attached) return;
+            cb.dataset.attached = '1';
+            cb.addEventListener('change', () => {
+                const row = cb.closest('.skill-row');
+                if (row) row.classList.toggle('invested', cb.checked);
+                saveSheet();
             });
         });
         // Custom skill name editing
@@ -5354,6 +5427,7 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
             btn.addEventListener('click', () => {
                 const idx = parseInt(btn.dataset.skillRemove);
                 const ci = idx - SKILLS.length;
+                _saveSkillState();
                 customSkills.splice(ci, 1);
                 renderAllSkills();
                 saveSheet();
@@ -5363,8 +5437,8 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
     }
     attachSkillListeners();
 
-    // Add custom skill button
-    document.getElementById('btnAddSkill').addEventListener('click', () => {
+    // Add custom skill button — preserves existing values
+    const _btn_1 = document.getElementById('btnAddSkill'); if (_btn_1) _btn_1.addEventListener('click', () => {
         const name = prompt('Введите название навыка:');
         if (!name || !name.trim()) return;
         const baseStr = prompt('Базовое значение (по умолчанию 5):', '5');
@@ -5443,7 +5517,7 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
     // Initial weapon rows
     for (let i = 0; i < 3; i++) createWeaponRow();
 
-    document.getElementById('btnAddWeapon').addEventListener('click', createWeaponRow);
+    const _btn_2 = document.getElementById('btnAddWeapon'); if (_btn_2) _btn_2.addEventListener('click', createWeaponRow);
 
     /* ========================================================
        AUTO-CALC: Half and Fifth values
@@ -5604,7 +5678,7 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
     /* ========================================================
        PRINT
        ======================================================== */
-    document.getElementById('btnPrint').addEventListener('click', () => {
+    const _btn_3 = document.getElementById('btnPrint'); if (_btn_3) _btn_3.addEventListener('click', () => {
         window.print();
     });
 
@@ -5653,6 +5727,11 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
         SKILLS.forEach((skill, index) => {
             const inp = document.getElementById(`skill_${index}`);
             if (inp) data.skills[index] = inp.value;
+        });
+        // Invest checkboxes (вкачиваем)
+        data.skillInvest = {};
+        document.querySelectorAll('.skill-invest:checked').forEach(cb => {
+            data.skillInvest[cb.dataset.skillInvest] = true;
         });
         // Custom skills (indices start at SKILLS.length)
         if (typeof customSkills !== 'undefined' && customSkills.length) {
@@ -5730,6 +5809,17 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
                     const fEl = document.getElementById(`skill_${idx}_fifth`);
                     if (hEl) hEl.textContent = half;
                     if (fEl) fEl.textContent = fifth;
+                }
+            });
+        }
+        // Invest checkboxes — restore AFTER renderAllSkills
+        if (data.skillInvest) {
+            Object.keys(data.skillInvest).forEach(idx => {
+                const cb = document.getElementById(`skill_${idx}_invest`);
+                if (cb) {
+                    cb.checked = true;
+                    const row = cb.closest('.skill-row');
+                    if (row) row.classList.add('invested');
                 }
             });
         }
@@ -5939,7 +6029,7 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
     /* ========================================================
        RESET / CLEAR
        ======================================================== */
-    document.getElementById('btnReset').addEventListener('click', () => {
+    const _btn_4 = document.getElementById('btnReset'); if (_btn_4) _btn_4.addEventListener('click', () => {
         if (!confirm('Очистить весь лист персонажа? Это также удалит портрет, боевой трекер и журнал сессии.')) return;
         document.querySelectorAll('#sheet input, #sheet textarea').forEach(el => {
             el.value = '';
@@ -5971,7 +6061,7 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
     /* ========================================================
        EXPORT JSON
        ======================================================== */
-    document.getElementById('btnExport').addEventListener('click', () => {
+    const _btn_5 = document.getElementById('btnExport'); if (_btn_5) _btn_5.addEventListener('click', () => {
         const data = collectSheetData();
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
@@ -5990,7 +6080,7 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
        IMPORT JSON
        ======================================================== */
     const fileInput = document.getElementById('fileInput');
-    document.getElementById('btnImport').addEventListener('click', () => fileInput.click());
+    const _btn_6 = document.getElementById('btnImport'); if (_btn_6) _btn_6.addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -6052,7 +6142,7 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
         ]
     };
 
-    document.getElementById('btnSample').addEventListener('click', () => {
+    const _btn_7 = document.getElementById('btnSample'); if (_btn_7) _btn_7.addEventListener('click', () => {
         if (!confirm('Загрузить пример персонажа? Текущие данные будут заменены.')) return;
         applySheetData(SAMPLE);
         saveSheet();
@@ -6434,7 +6524,7 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
         ).join('');
         agePanel.style.display = 'block';
     }
-    document.getElementById('charAge').addEventListener('input', updateAgeMods);
+    const _btn_8 = document.getElementById('charAge'); if (_btn_8) _btn_8.addEventListener('input', updateAgeMods);
 
     /* ========================================================
        COMBAT / INITIATIVE TRACKER
@@ -6446,6 +6536,7 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
     const combatRoundEl = document.getElementById('combatRound');
 
     function renderCombat() {
+        if (!combatList) return;
         if (!combatParticipants.length) {
             combatList.innerHTML = '<div class="combat-empty">Добавьте участников боя кнопкой «+ Боец». Текущий ход подсвечивается.</div>';
             return;
@@ -6460,13 +6551,13 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
                 <button class="btn-row-del" data-cidx="${i}" type="button" title="Удалить">✕</button>
             </div>
         `).join('');
-        combatRoundEl.textContent = combatRoundNum;
+        if (combatRoundEl) combatRoundEl.textContent = combatRoundNum;
     }
 
     function addCombatant() {
         combatParticipants.push({ name: '', init: '', hp: '', note: '' });
         renderCombat();
-        // focus last name input
+        if (!combatList) return;
         const inputs = combatList.querySelectorAll('input[data-field="name"]');
         if (inputs.length) inputs[inputs.length - 1].focus();
     }
@@ -6504,7 +6595,7 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
     }
 
     // Event delegation for combat row inputs & delete
-    combatList.addEventListener('input', (e) => {
+    if (combatList) combatList.addEventListener('input', (e) => {
         const cidx = e.target.dataset.cidx;
         const field = e.target.dataset.field;
         if (cidx === undefined || !field) return;
@@ -6515,7 +6606,7 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
             badge.textContent = e.target.value || '—';
         }
     });
-    combatList.addEventListener('click', (e) => {
+    if (combatList) combatList.addEventListener('click', (e) => {
         if (e.target.classList.contains('btn-row-del')) {
             const idx = parseInt(e.target.dataset.cidx);
             combatParticipants.splice(idx, 1);
@@ -6524,10 +6615,10 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
         }
     });
 
-    document.getElementById('btnCombatAdd').addEventListener('click', addCombatant);
-    document.getElementById('btnCombatNext').addEventListener('click', nextTurn);
-    document.getElementById('btnCombatSort').addEventListener('click', sortCombat);
-    document.getElementById('btnCombatReset').addEventListener('click', resetCombat);
+    const _btnCA = document.getElementById('btnCombatAdd'); if (_btnCA) _btnCA.addEventListener('click', addCombatant);
+    const _btnCN = document.getElementById('btnCombatNext'); if (_btnCN) _btnCN.addEventListener('click', nextTurn);
+    const _btnCS = document.getElementById('btnCombatSort'); if (_btnCS) _btnCS.addEventListener('click', sortCombat);
+    const _btnCR = document.getElementById('btnCombatReset'); if (_btnCR) _btnCR.addEventListener('click', resetCombat);
 
     /* ========================================================
        SESSION LOG
@@ -6546,6 +6637,7 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
     }
 
     function renderSessionLog() {
+        if (!sessionLogList) return;
         if (!sessionLog.length) {
             sessionLogList.innerHTML = '<div class="combat-empty">Броски кубиков, потери рассудка и ходы боя записываются автоматически. Можно добавить заметку вручную.</div>';
             return;
@@ -6560,7 +6652,7 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
         `).join('');
     }
 
-    sessionLogList.addEventListener('click', (e) => {
+    if (sessionLogList) sessionLogList.addEventListener('click', (e) => {
         if (e.target.classList.contains('log-del')) {
             const idx = parseInt(e.target.dataset.logIdx);
             sessionLog.splice(idx, 1);
@@ -6569,14 +6661,14 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
         }
     });
 
-    document.getElementById('btnLogAdd').addEventListener('click', () => {
+    const _btnLA = document.getElementById('btnLogAdd'); if (_btnLA) _btnLA.addEventListener('click', () => {
         const text = prompt('Введите заметку для журнала:');
         if (text && text.trim()) {
             addLogEntry('note', text.trim().substring(0, 200));
             toast('Заметка добавлена в журнал', 'success', 1500);
         }
     });
-    document.getElementById('btnLogClear').addEventListener('click', () => {
+    const _btnLC = document.getElementById('btnLogClear'); if (_btnLC) _btnLC.addEventListener('click', () => {
         if (!sessionLog.length) return;
         if (!confirm('Очистить журнал сессии?')) return;
         sessionLog = [];
@@ -6695,7 +6787,7 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
         `).join('');
     }
 
-    document.getElementById('btnSpellLib').addEventListener('click', () => {
+    const _btnSL = document.getElementById('btnSpellLib'); if (_btnSL) _btnSL.addEventListener('click', () => {
         spellOverlay.classList.add('open');
         spellSearch.value = '';
         renderSpells('');
@@ -6848,7 +6940,7 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
         }
     };
 
-    document.getElementById('btnLoadPack').addEventListener('click', () => {
+    const _btn_9 = document.getElementById('btnLoadPack'); if (_btn_9) _btn_9.addEventListener('click', () => {
         const sel = document.getElementById('equipPackSelect');
         const key = sel.value;
         if (!key) { toast('Выберите набор экипировки', 'warn'); sel.focus(); return; }
@@ -6942,11 +7034,11 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
         addLogEntry('note', `Сгенерирован NPC: <span class="log-val">${npc.name}</span> (${npc.role}) — HP ${npc.hpMax}, САН ${npc.san}`);
     }
 
-    document.getElementById('btnNpcGen').addEventListener('click', () => {
+    const _btn_10 = document.getElementById('btnNpcGen'); if (_btn_10) _btn_10.addEventListener('click', () => {
         npcOverlay.classList.add('open');
         npcResult.innerHTML = '<div class="npc-empty">Нажмите кнопку выше, чтобы сгенерировать случайного NPC с характеристиками, навыками и снаряжением.</div>';
     });
-    document.getElementById('npcClose').addEventListener('click', () => npcOverlay.classList.remove('open'));
+    const _btn_11 = document.getElementById('npcClose'); if (_btn_11) _btn_11.addEventListener('click', () => npcOverlay.classList.remove('open'));
     npcOverlay.addEventListener('click', (e) => { if (e.target === npcOverlay) npcOverlay.classList.remove('open'); });
     ['btnNpcAlly', 'btnNpcEnemy', 'btnNpcCultist', 'btnNpcCivilian'].forEach((id, i) => {
         const types = ['ally', 'enemy', 'cultist', 'civilian'];
@@ -6960,7 +7052,7 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
     /* ========================================================
        SESSION LOG EXPORT (TXT)
        ======================================================== */
-    document.getElementById('btnLogExport').addEventListener('click', () => {
+    const _btnLE = document.getElementById('btnLogExport'); if (_btnLE) _btnLE.addEventListener('click', () => {
         if (!sessionLog.length) { toast('Журнал пуст', 'warn'); return; }
         const tagLabels = { roll: 'БРОСОК', san: 'САН', combat: 'БОЙ', note: 'ЗАМЕТКА' };
         const date = new Date().toLocaleString('ru-RU');
@@ -7022,10 +7114,10 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
        CHEAT-SHEET MODAL
        ======================================================== */
     const cheatOverlay = document.getElementById('cheatOverlay');
-    document.getElementById('btnCheatSheet').addEventListener('click', () => {
+    const _btn_12 = document.getElementById('btnCheatSheet'); if (_btn_12) _btn_12.addEventListener('click', () => {
         cheatOverlay.classList.add('open');
     });
-    document.getElementById('cheatClose').addEventListener('click', () => cheatOverlay.classList.remove('open'));
+    const _btn_13 = document.getElementById('cheatClose'); if (_btn_13) _btn_13.addEventListener('click', () => cheatOverlay.classList.remove('open'));
     cheatOverlay.addEventListener('click', (e) => { if (e.target === cheatOverlay) cheatOverlay.classList.remove('open'); });
 
     /* ========================================================
@@ -7059,7 +7151,7 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
     /* ========================================================
        FORCE BOUT BUTTON (manual trigger)
        ======================================================== */
-    document.getElementById('btnForceBout').addEventListener('click', () => {
+    const _btn_14 = document.getElementById('btnForceBout'); if (_btn_14) _btn_14.addEventListener('click', () => {
         toast('Принудительный приступ безумия', 'warn', 2000);
         openBoutModal();
     });
@@ -7068,13 +7160,13 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
        ENCOUNTER DIFFICULTY ESTIMATOR
        ======================================================== */
     const encounterOverlay = document.getElementById('encounterOverlay');
-    document.getElementById('btnEncounter').addEventListener('click', () => {
+    const _btn_15 = document.getElementById('btnEncounter'); if (_btn_15) _btn_15.addEventListener('click', () => {
         encounterOverlay.classList.add('open');
     });
-    document.getElementById('encounterClose').addEventListener('click', () => encounterOverlay.classList.remove('open'));
+    const _btn_16 = document.getElementById('encounterClose'); if (_btn_16) _btn_16.addEventListener('click', () => encounterOverlay.classList.remove('open'));
     encounterOverlay.addEventListener('click', (e) => { if (e.target === encounterOverlay) encounterOverlay.classList.remove('open'); });
 
-    document.getElementById('btnEncCalc').addEventListener('click', () => {
+    const _btn_17 = document.getElementById('btnEncCalc'); if (_btn_17) _btn_17.addEventListener('click', () => {
         const pp = parseInt(document.getElementById('encPartyPower').value, 10) || 0;
         const pc = parseInt(document.getElementById('encPartyCount').value, 10) || 1;
         const ep = parseInt(document.getElementById('encEnemyPower').value, 10) || 0;
@@ -7207,10 +7299,10 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
         saveSheet();
     }
 
-    document.getElementById('btnChaseAddPursued').addEventListener('click', () => addChaseParticipant('pursued'));
-    document.getElementById('btnChaseAddPursuer').addEventListener('click', () => addChaseParticipant('pursuer'));
+    const _btn_18 = document.getElementById('btnChaseAddPursued'); if (_btn_18) _btn_18.addEventListener('click', () => addChaseParticipant('pursued'));
+    const _btn_19 = document.getElementById('btnChaseAddPursuer'); if (_btn_19) _btn_19.addEventListener('click', () => addChaseParticipant('pursuer'));
 
-    document.getElementById('btnChaseAdvance').addEventListener('click', () => {
+    const _btn_20 = document.getElementById('btnChaseAdvance'); if (_btn_20) _btn_20.addEventListener('click', () => {
         if (!chaseParticipants.length) { toast('Нет участников погони', 'warn'); return; }
         // Each participant rolls MOV (simplified: random 4-9)
         chaseParticipants.forEach(p => {
@@ -7238,7 +7330,7 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
         saveSheet();
     });
 
-    document.getElementById('btnChaseReset').addEventListener('click', () => {
+    const _btn_21 = document.getElementById('btnChaseReset'); if (_btn_21) _btn_21.addEventListener('click', () => {
         if (!chaseParticipants.length) return;
         if (!confirm('Сбросить погоню?')) return;
         chaseParticipants = [];
@@ -7270,7 +7362,7 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
     /* ========================================================
        BACKUP / RESTORE ALL DATA
        ======================================================== */
-    document.getElementById('btnBackup').addEventListener('click', () => {
+    const _btn_22 = document.getElementById('btnBackup'); if (_btn_22) _btn_22.addEventListener('click', () => {
         const backup = {
             version: 2,
             date: new Date().toISOString(),
@@ -7320,7 +7412,7 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
         backupInput.value = '';
     });
     // Long-press backup button to restore (shift+click)
-    document.getElementById('btnBackup').addEventListener('click', (e) => {
+    const _btn_23 = document.getElementById('btnBackup'); if (_btn_23) _btn_23.addEventListener('click', (e) => {
         if (e.shiftKey) {
             e.preventDefault();
             backupInput.click();
@@ -7452,11 +7544,11 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
         diff.innerHTML = `<div class="compare-diff ${cls}">Разница характеристик: ${sign}${delta} (A: ${sumA} · B: ${sumB})</div>`;
     }
 
-    document.getElementById('btnCompare').addEventListener('click', () => {
+    const _btn_24 = document.getElementById('btnCompare'); if (_btn_24) _btn_24.addEventListener('click', () => {
         populateCompareSelects();
         compareOverlay.classList.add('open');
     });
-    document.getElementById('compareClose').addEventListener('click', () => compareOverlay.classList.remove('open'));
+    const _btn_25 = document.getElementById('compareClose'); if (_btn_25) _btn_25.addEventListener('click', () => compareOverlay.classList.remove('open'));
     compareOverlay.addEventListener('click', (e) => { if (e.target === compareOverlay) compareOverlay.classList.remove('open'); });
     compareA.addEventListener('change', () => {
         const a = getCompareData(compareA.value);
@@ -7473,11 +7565,11 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
        PRINTABLE HANDOUT MODE
        ======================================================== */
     const handoutOverlay = document.getElementById('handoutOverlay');
-    document.getElementById('btnHandout').addEventListener('click', () => {
+    const _btn_26 = document.getElementById('btnHandout'); if (_btn_26) _btn_26.addEventListener('click', () => {
         generateHandout();
         handoutOverlay.classList.add('open');
     });
-    document.getElementById('handoutClose').addEventListener('click', () => handoutOverlay.classList.remove('open'));
+    const _btn_27 = document.getElementById('handoutClose'); if (_btn_27) _btn_27.addEventListener('click', () => handoutOverlay.classList.remove('open'));
     handoutOverlay.addEventListener('click', (e) => { if (e.target === handoutOverlay) handoutOverlay.classList.remove('open'); });
 
     function generateHandout() {
@@ -7515,7 +7607,7 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
             `<strong>Навыки:</strong> ${filledSkills.join(' · ')}` : '<em>Навыки не заполнены</em>';
     }
 
-    document.getElementById('handoutPrint').addEventListener('click', () => {
+    const _btn_28 = document.getElementById('handoutPrint'); if (_btn_28) _btn_28.addEventListener('click', () => {
         // Open print window with just the handout card
         const card = document.getElementById('handoutCard').cloneNode(true);
         // Remove action buttons
@@ -7592,7 +7684,7 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
             renderSlots();
         });
     });
-    document.getElementById('btnSlotSave').addEventListener('click', () => {
+    const _btn_29 = document.getElementById('btnSlotSave'); if (_btn_29) _btn_29.addEventListener('click', () => {
         const slots = loadSlots();
         const currentData = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
         if (!currentData) { toast('Нет данных для сохранения', 'warn'); return; }
@@ -7601,7 +7693,7 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
         renderSlots();
         toast(`Персонаж сохранён в слот ${currentSlot}`, 'success');
     });
-    document.getElementById('btnSlotDelete').addEventListener('click', () => {
+    const _btn_30 = document.getElementById('btnSlotDelete'); if (_btn_30) _btn_30.addEventListener('click', () => {
         const slots = loadSlots();
         if (!slots[currentSlot]) { toast('Слот уже пуст', 'info'); return; }
         if (!confirm(`Удалить персонажа из слота ${currentSlot}?`)) return;
@@ -7653,13 +7745,13 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
     }
 
     const statsOverlay = document.getElementById('statsOverlay');
-    document.getElementById('btnStats').addEventListener('click', () => {
+    const _btn_31 = document.getElementById('btnStats'); if (_btn_31) _btn_31.addEventListener('click', () => {
         renderStats();
         statsOverlay.classList.add('open');
     });
-    document.getElementById('statsClose').addEventListener('click', () => statsOverlay.classList.remove('open'));
+    const _btn_32 = document.getElementById('statsClose'); if (_btn_32) _btn_32.addEventListener('click', () => statsOverlay.classList.remove('open'));
     statsOverlay.addEventListener('click', (e) => { if (e.target === statsOverlay) statsOverlay.classList.remove('open'); });
-    document.getElementById('btnStatsReset').addEventListener('click', () => {
+    const _btn_33 = document.getElementById('btnStatsReset'); if (_btn_33) _btn_33.addEventListener('click', () => {
         rollStats = { total: 0, success: 0, fail: 0, critical: 0, extreme: 0, hard: 0, regular: 0, fumble: 0 };
         renderStats();
         toast('Статистика сброшена', 'info', 1500);
@@ -7670,7 +7762,7 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
        ======================================================== */
     const shareOverlay = document.getElementById('shareOverlay');
     const shareUrl = document.getElementById('shareUrl');
-    document.getElementById('btnShare').addEventListener('click', () => {
+    const _btn_34 = document.getElementById('btnShare'); if (_btn_34) _btn_34.addEventListener('click', () => {
         const data = collectSheetData();
         // Exclude portrait from share (too large for URL)
         delete data.portrait;
@@ -7689,9 +7781,9 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
             console.error(e);
         }
     });
-    document.getElementById('shareClose').addEventListener('click', () => shareOverlay.classList.remove('open'));
+    const _btn_35 = document.getElementById('shareClose'); if (_btn_35) _btn_35.addEventListener('click', () => shareOverlay.classList.remove('open'));
     shareOverlay.addEventListener('click', (e) => { if (e.target === shareOverlay) shareOverlay.classList.remove('open'); });
-    document.getElementById('btnShareCopy').addEventListener('click', () => {
+    const _btn_36 = document.getElementById('btnShareCopy'); if (_btn_36) _btn_36.addEventListener('click', () => {
         shareUrl.select();
         try {
             document.execCommand('copy');
@@ -7700,7 +7792,7 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
             toast('Не удалось скопировать', 'error');
         }
     });
-    document.getElementById('btnShareOpen').addEventListener('click', () => {
+    const _btn_37 = document.getElementById('btnShareOpen'); if (_btn_37) _btn_37.addEventListener('click', () => {
         if (shareUrl.value) window.open(shareUrl.value, '_blank');
     });
 
@@ -7729,10 +7821,10 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
        KEYBOARD SHORTCUTS HELP MODAL
        ======================================================== */
     const shortcutsOverlay = document.getElementById('shortcutsOverlay');
-    document.getElementById('kbdHintBtn').addEventListener('click', () => {
+    const _btn_38 = document.getElementById('kbdHintBtn'); if (_btn_38) _btn_38.addEventListener('click', () => {
         shortcutsOverlay.classList.add('open');
     });
-    document.getElementById('shortcutsClose').addEventListener('click', () => shortcutsOverlay.classList.remove('open'));
+    const _btn_39 = document.getElementById('shortcutsClose'); if (_btn_39) _btn_39.addEventListener('click', () => shortcutsOverlay.classList.remove('open'));
     shortcutsOverlay.addEventListener('click', (e) => { if (e.target === shortcutsOverlay) shortcutsOverlay.classList.remove('open'); });
 
     // Add Ctrl+/ shortcut for help
@@ -7845,7 +7937,7 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
         addLogEntry('roll', `Формула <span class="log-val">${formula}</span> → <span class="log-val">${finalTotal}</span> (${detailText})${diceAdvantage !== 'normal' ? ` [${diceAdvantage === 'adv' ? 'преимущ.' : 'помеха'}]` : ''}`);
     }
 
-    document.getElementById('btnFormulaRoll').addEventListener('click', performFormulaRoll);
+    const _btn_40 = document.getElementById('btnFormulaRoll'); if (_btn_40) _btn_40.addEventListener('click', performFormulaRoll);
     diceFormulaInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') { e.preventDefault(); performFormulaRoll(); }
     });
