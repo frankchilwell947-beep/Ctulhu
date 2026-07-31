@@ -1354,17 +1354,18 @@ body.theme-china .section-title::after { background: linear-gradient(90deg, #003
         display: none !important;
     }
 
-    /* Sheet: add padding for margins, keep paper background */
+    /* Sheet: padding with clone so it repeats on every page */
     .sheet {
         width: 100% !important;
         min-height: auto !important;
         box-shadow: none !important;
         margin: 0 !important;
-        padding: 12mm !important;
-        padding-top: 14mm !important;
+        padding: 10mm 12mm !important;
         border-radius: 0 !important;
         break-inside: auto;
         overflow: visible !important;
+        -webkit-box-decoration-break: clone !important;
+        box-decoration-break: clone !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
         color-adjust: exact !important;
