@@ -603,10 +603,11 @@ input[type="number"] { -moz-appearance: textfield; }
     padding: 2px 3px;
     border-bottom: 1px dotted var(--border-light);
     break-inside: avoid;
-    font-size: 9px;
-    line-height: 1.3;
+    font-size: 10px;
+    line-height: 1.4;
     transition: background 0.2s ease;
     border-radius: 1px;
+    flex-wrap: wrap;
 }
 
 .skill-row:hover {
@@ -644,15 +645,12 @@ input[type="number"] { -moz-appearance: textfield; }
 .skill-name {
     flex: 1;
     min-width: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
     color: var(--text-primary);
     font-weight: 400;
 }
 
 .skill-base {
-    font-size: 7px;
+    font-size: 8.5px;
     color: var(--text-secondary);
     opacity: 0.55;
     margin-right: 2px;
@@ -660,10 +658,10 @@ input[type="number"] { -moz-appearance: textfield; }
 }
 
 .skill-input {
-    width: 28px;
+    width: 30px;
     text-align: center;
     font-family: var(--body-font);
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
     color: var(--text-primary);
     background: transparent;
@@ -689,15 +687,40 @@ input[type="number"] { -moz-appearance: textfield; }
 
 .skill-calc span {
     font-family: var(--body-font);
-    font-size: 7.5px;
+    font-size: 9px;
     font-weight: 700;
     color: var(--text-secondary);
-    min-width: 18px;
+    min-width: 22px;
     text-align: center;
-    padding: 1px 2px;
+    padding: 1px 3px;
     background: rgba(0,0,0,0.05);
     border-radius: 2px;
     border: 1px solid rgba(0,0,0,0.04);
+}
+
+/* Editable skill specialization input (inside parentheses) */
+.skill-spec-input {
+    width: 60px;
+    font-family: var(--body-font);
+    font-size: 10px;
+    color: var(--accent);
+    font-weight: 700;
+    background: transparent;
+    border: none;
+    border-bottom: 1px dotted var(--border);
+    padding: 0 2px;
+    outline: none;
+    border-radius: 0;
+    transition: border-color 0.3s ease;
+}
+.skill-spec-input:focus {
+    border-bottom-color: var(--accent);
+    background: var(--bg-input-focus);
+}
+.skill-spec-input::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.4;
+    font-weight: 400;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -5349,9 +5372,16 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
         if (skill.special === 'edu') baseLabel = 'ОБР';
         if (skill.special === 'dex_half') baseLabel = 'ЛВК/2';
 
-        const nameHTML = isCustom
-            ? `<input type="text" class="skill-name-input" value="${skill.name}" data-custom-name="${index}" placeholder="Название навыка" aria-label="Название навыка">`
-            : `<span class="skill-name" title="${skill.name}">${skill.name}</span>`;
+        let nameHTML;
+        if (isCustom) {
+            nameHTML = `<input type="text" class="skill-name-input" value="${skill.name}" data-custom-name="${index}" placeholder="Название навыка" aria-label="Название навыка">`;
+        } else if (skill.editable && skill.name.includes('(')) {
+            // Split name into prefix and editable part: "Наука (____)" → "Наука" + input
+            const prefix = skill.name.replace(/\s*\(.*\)/, '');
+            nameHTML = `<span class="skill-name">${prefix}<br>(<input type="text" class="skill-spec-input" id="skill_${index}_spec" data-skill-spec="${index}" placeholder="..." aria-label="Специализация ${prefix}">)</span>`;
+        } else {
+            nameHTML = `<span class="skill-name" title="${skill.name}">${skill.name}</span>`;
+        }
 
         const removeBtn = isCustom
             ? `<button type="button" class="skill-remove-btn" data-skill-remove="${index}" title="Удалить навык">✕</button>`
@@ -5376,14 +5406,19 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
     // Save current skill values & invest state before re-render, restore after
     let _skillValuesCache = {};
     let _skillInvestCache = {};
+    let _skillSpecCache = {};
     function _saveSkillState() {
         _skillValuesCache = {};
         _skillInvestCache = {};
+        _skillSpecCache = {};
         document.querySelectorAll('.skill-input').forEach(inp => {
             if (inp.dataset.skillIndex !== undefined) _skillValuesCache[inp.dataset.skillIndex] = inp.value;
         });
         document.querySelectorAll('.skill-invest').forEach(cb => {
             if (cb.dataset.skillInvest !== undefined) _skillInvestCache[cb.dataset.skillInvest] = cb.checked;
+        });
+        document.querySelectorAll('.skill-spec-input').forEach(inp => {
+            if (inp.dataset.skillSpec !== undefined) _skillSpecCache[inp.dataset.skillSpec] = inp.value;
         });
     }
     function _restoreSkillState() {
@@ -5407,6 +5442,11 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
             }
         });
         updateSkillHighlight();
+        // Restore spec inputs
+        Object.keys(_skillSpecCache).forEach(idx => {
+            const specInp = document.getElementById(`skill_${idx}_spec`);
+            if (specInp) specInp.value = _skillSpecCache[idx];
+        });
     }
 
     function renderAllSkills() {
@@ -5635,11 +5675,11 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
             if (strSiz >= 2 && strSiz <= 64) { db = '−2'; build = '−2'; }
             if (strSiz >= 65 && strSiz <= 84) { db = '−1'; build = '−1'; }
             if (strSiz >= 85 && strSiz <= 124) { db = '0'; build = '0'; }
-            if (strSiz >= 125 && strSiz <= 164) { db = '+1к4'; build = '+1'; }
-            if (strSiz >= 165 && strSiz <= 204) { db = '+1к6'; build = '+2'; }
-            if (strSiz >= 205 && strSiz <= 284) { db = '+2к6'; build = '+3'; }
-            if (strSiz >= 285 && strSiz <= 364) { db = '+3к6'; build = '+4'; }
-            if (strSiz >= 365) { db = '+4к6'; build = '+5'; }
+            if (strSiz >= 125 && strSiz <= 164) { db = '+1к4'; build = '1'; }
+            if (strSiz >= 165 && strSiz <= 204) { db = '+1к6'; build = '2'; }
+            if (strSiz >= 205 && strSiz <= 284) { db = '+2к6'; build = '3'; }
+            if (strSiz >= 285 && strSiz <= 364) { db = '+3к6'; build = '4'; }
+            if (strSiz >= 365) { db = '+4к6'; build = '5'; }
         }
         document.getElementById('derivedDB').textContent = db;
         document.getElementById('derivedBuild').textContent = build;
@@ -5778,6 +5818,13 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
         document.querySelectorAll('.skill-invest:checked').forEach(cb => {
             data.skillInvest[cb.dataset.skillInvest] = true;
         });
+        // Skill specializations (Наука, Язык)
+        data.skillSpecs = {};
+        document.querySelectorAll('.skill-spec-input').forEach(inp => {
+            if (inp.dataset.skillSpec !== undefined && inp.value) {
+                data.skillSpecs[inp.dataset.skillSpec] = inp.value;
+            }
+        });
         // Custom skills (indices start at SKILLS.length)
         if (typeof customSkills !== 'undefined' && customSkills.length) {
             data.customSkills = customSkills.map((s, i) => ({
@@ -5866,6 +5913,13 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
                     const row = cb.closest('.skill-row');
                     if (row) row.classList.add('invested');
                 }
+            });
+        }
+        // Skill specializations (Наука, Язык)
+        if (data.skillSpecs) {
+            Object.keys(data.skillSpecs).forEach(idx => {
+                const specInp = document.getElementById(`skill_${idx}_spec`);
+                if (specInp) specInp.value = data.skillSpecs[idx];
             });
         }
         // Weapons — clear existing then recreate
