@@ -1442,7 +1442,6 @@ body.theme-china .section-title::after { background: linear-gradient(90deg, #003
     .vital-block { break-inside: avoid !important; }
     .derived-block { break-inside: avoid !important; }
     .skill-row { break-inside: avoid !important; }
-    .field-group { break-inside: avoid !important; }
     .weapons-table tr { break-inside: avoid !important; }
 
     /* Skills: allow the container to flow across pages, but keep columns intact */
@@ -1459,16 +1458,18 @@ body.theme-china .section-title::after { background: linear-gradient(90deg, #003
         page-break-after: avoid !important;
     }
 
-    /* Backstory grids: allow break across pages, but protect individual fields */
+    /* Backstory & biography grids: switch to single column for clean page breaks */
     .backstory-grid {
+        display: block !important;
         break-inside: auto;
     }
-    .backstory-grid .field-group {
+    .backstory-grid > .field-group {
         break-inside: avoid !important;
         page-break-inside: avoid !important;
+        margin-bottom: 2mm !important;
     }
 
-    /* Field rows: protect from breaking */
+    /* Inventory field rows: allow breaking between rows but not inside a single row */
     .field-row, .field-row-2, .field-row-3, .field-row-4 {
         break-inside: avoid !important;
         page-break-inside: avoid !important;
@@ -5719,145 +5720,10 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
     applyTheme('theme-ussr');
 
     /* ========================================================
-       PRINT — Smart page break insertion for clean PDF output
+       PRINT
        ======================================================== */
-    const A4_HEIGHT_PX = 1122.52; // A4 height in px at 96dpi (297mm)
-    const PAGE_PADDING_TOP = 14 * 3.7795; // 14mm in px
-    const PAGE_PADDING_BOTTOM = 12 * 3.7795; // 12mm in px
-    const USABLE_PAGE_HEIGHT = A4_HEIGHT_PX - PAGE_PADDING_TOP - PAGE_PADDING_BOTTOM;
-
-    function preparePrintBreaks() {
-        // Remove any previously inserted print breaks
-        document.querySelectorAll('.auto-page-break').forEach(el => el.remove());
-
-        const sheet = document.querySelector('.sheet');
-        if (!sheet) return;
-
-        // Collect all "breakable" elements in document order
-        const breakableSelectors = [
-            '.section',
-            '.section > .section-title',
-            '.skill-row',
-            '.weapons-table tr',
-            '.backstory-grid > .field-group',
-            '.field-row',
-            '.field-row-2',
-            '.field-row-3',
-            '.field-row-4',
-            '.stat-block',
-            '.vital-block',
-            '.derived-block',
-            '.personal-grid',
-            '.stats-grid',
-            '.derived-grid',
-            '.vitals-grid'
-        ];
-
-        const sheetRect = sheet.getBoundingClientRect();
-        const sheetTop = sheetRect.top + window.scrollY;
-
-        // Calculate which "page" an element falls on and where the page boundaries are
-        let pageBreakPoints = [];
-        let currentPageEnd = USABLE_PAGE_HEIGHT;
-
-        // Get all section-title elements to check if they'd be orphaned at bottom of page
-        const allSectionTitles = sheet.querySelectorAll('.section-title');
-        allSectionTitles.forEach(title => {
-            const titleRect = title.getBoundingClientRect();
-            const titleTop = titleRect.top + window.scrollY - sheetTop;
-            const titleBottom = titleTop + titleRect.height;
-
-            // Check if this title is near the bottom of a page
-            let pageNum = Math.floor(titleTop / USABLE_PAGE_HEIGHT);
-            let pageEnd = (pageNum + 1) * USABLE_PAGE_HEIGHT;
-            let remainingOnPage = pageEnd - titleTop;
-
-            // If title + less than 40px of content would be on this page, break before
-            if (remainingOnPage < 60 && remainingOnPage > 0) {
-                const section = title.closest('.section');
-                if (section) {
-                    const breakDiv = document.createElement('div');
-                    breakDiv.className = 'auto-page-break';
-                    breakDiv.style.cssText = 'break-before: page; page-break-before: always; height: 0; margin: 0; padding: 0;';
-                    section.parentNode.insertBefore(breakDiv, section);
-                }
-            }
-        });
-
-        // Check skills container — if it starts near page bottom, break before its section
-        const skillsSection = sheet.querySelectorAll('.section')[4]; // Section V (0-indexed)
-        if (skillsSection) {
-            const skillsRect = skillsSection.getBoundingClientRect();
-            const skillsTop = skillsRect.top + window.scrollY - sheetTop;
-            let pageNum = Math.floor(skillsTop / USABLE_PAGE_HEIGHT);
-            let pageEnd = (pageNum + 1) * USABLE_PAGE_HEIGHT;
-            let remainingOnPage = pageEnd - skillsTop;
-
-            // If less than 30% of the page is left when skills start, push to next page
-            if (remainingOnPage < USABLE_PAGE_HEIGHT * 0.25 && remainingOnPage > 0) {
-                if (!skillsSection.previousElementSibling || !skillsSection.previousElementSibling.classList.contains('auto-page-break')) {
-                    const breakDiv = document.createElement('div');
-                    breakDiv.className = 'auto-page-break';
-                    breakDiv.style.cssText = 'break-before: page; page-break-before: always; height: 0; margin: 0; padding: 0;';
-                    skillsSection.parentNode.insertBefore(breakDiv, skillsSection);
-                }
-            }
-        }
-
-        // Check weapons section (VI) — same logic
-        const weaponsSection = sheet.querySelectorAll('.section')[5]; // Section VI
-        if (weaponsSection) {
-            const weaponsRect = weaponsSection.getBoundingClientRect();
-            const weaponsTop = weaponsRect.top + window.scrollY - sheetTop;
-            let pageNum = Math.floor(weaponsTop / USABLE_PAGE_HEIGHT);
-            let pageEnd = (pageNum + 1) * USABLE_PAGE_HEIGHT;
-            let remainingOnPage = pageEnd - weaponsTop;
-
-            if (remainingOnPage < USABLE_PAGE_HEIGHT * 0.15 && remainingOnPage > 0) {
-                if (!weaponsSection.previousElementSibling || !weaponsSection.previousElementSibling.classList.contains('auto-page-break')) {
-                    const breakDiv = document.createElement('div');
-                    breakDiv.className = 'auto-page-break';
-                    breakDiv.style.cssText = 'break-before: page; page-break-before: always; height: 0; margin: 0; padding: 0;';
-                    weaponsSection.parentNode.insertBefore(breakDiv, weaponsSection);
-                }
-            }
-        }
-
-        // Check backstory sections (VII, VIII, IX) — prevent orphaned titles
-        const backStorySections = [6, 7, 8]; // Sections VII, VIII, IX (0-indexed)
-        const allSections = sheet.querySelectorAll('.section');
-        backStorySections.forEach(idx => {
-            const section = allSections[idx];
-            if (!section) return;
-            const sectionRect = section.getBoundingClientRect();
-            const sectionTop = sectionRect.top + window.scrollY - sheetTop;
-            let pageNum = Math.floor(sectionTop / USABLE_PAGE_HEIGHT);
-            let pageEnd = (pageNum + 1) * USABLE_PAGE_HEIGHT;
-            let remainingOnPage = pageEnd - sectionTop;
-
-            // If section title would be at the very bottom of a page with almost no content after
-            if (remainingOnPage < USABLE_PAGE_HEIGHT * 0.12 && remainingOnPage > 0) {
-                if (!section.previousElementSibling || !section.previousElementSibling.classList.contains('auto-page-break')) {
-                    const breakDiv = document.createElement('div');
-                    breakDiv.className = 'auto-page-break';
-                    breakDiv.style.cssText = 'break-before: page; page-break-before: always; height: 0; margin: 0; padding: 0;';
-                    section.parentNode.insertBefore(breakDiv, section);
-                }
-            }
-        });
-    }
-
-    function cleanupPrintBreaks() {
-        document.querySelectorAll('.auto-page-break').forEach(el => el.remove());
-    }
-
-    // Listen to print events
-    window.addEventListener('beforeprint', preparePrintBreaks);
-    window.addEventListener('afterprint', cleanupPrintBreaks);
-
     const _btn_3 = document.getElementById('btnPrint'); if (_btn_3) _btn_3.addEventListener('click', () => {
-        preparePrintBreaks();
-        setTimeout(() => window.print(), 50);
+        window.print();
     });
 
     /* ========================================================
