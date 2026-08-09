@@ -68,8 +68,7 @@ body {
    TOOLBAR — floating control bar (hidden on print)
    ═══════════════════════════════════════════════════════════════ */
 .toolbar {
-    position: sticky;
-    top: 0;
+    position: relative;
     z-index: 1000;
     width: 100%;
     max-width: 820px;
@@ -4447,7 +4446,7 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
 </div>
 
 <!-- Save slots row -->
-<div class="toolbar" style="top:auto;position:relative;margin-bottom:12px;box-shadow:none;border-radius:8px;background:rgba(20,20,24,0.92);">
+<div class="toolbar" style="margin-bottom:12px;box-shadow:none;border-radius:8px;background:rgba(20,20,24,0.92);">
     <div class="slot-row" id="slotRow">
         <span class="kbd-hint" style="color:#9a9a9a;">💾 Слоты:</span>
         <button class="slot-btn active" data-slot="1" type="button"><span class="slot-num">1</span><span class="slot-name">Текущий</span></button>
@@ -7730,7 +7729,8 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
        SAVE SLOTS (multiple characters)
        ======================================================== */
     const SLOTS_KEY = 'coc7e_slots_v1';
-    let currentSlot = 1;
+    const CURRENT_SLOT_KEY = 'coc7e_current_slot';
+    let currentSlot = parseInt(localStorage.getItem(CURRENT_SLOT_KEY)) || 1;
 
     function loadSlots() {
         try { return JSON.parse(localStorage.getItem(SLOTS_KEY) || '{}'); }
@@ -7768,19 +7768,26 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
             // Load target slot
             if (slots[num]) {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(slots[num]));
+                saveSlots(slots);
+                currentSlot = num;
+                localStorage.setItem(CURRENT_SLOT_KEY, String(currentSlot));
                 loadSheet();
+                renderSlots();
                 toast(`Загружен слот ${num}`, 'success');
             } else {
                 // Empty slot — clear the sheet
                 if (!confirm('Слот пуст. Очистить текущий лист для нового персонажа?')) {
                     renderSlots(); return;
                 }
+                // Save old slot data first
+                saveSlots(slots);
+                // Switch to new slot and persist
+                currentSlot = num;
+                localStorage.setItem(CURRENT_SLOT_KEY, String(currentSlot));
+                // Clear current sheet data and reload UI
                 localStorage.removeItem(STORAGE_KEY);
                 location.reload();
             }
-            saveSlots(slots);
-            currentSlot = num;
-            renderSlots();
         });
     });
     const _btn_29 = document.getElementById('btnSlotSave'); if (_btn_29) _btn_29.addEventListener('click', () => {
