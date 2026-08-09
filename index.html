@@ -4512,7 +4512,11 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
             <div class="dice-formula-detail">Введите формулу и бросайте</div>
         </div>
     </div>
-    <div class="dice-history" id="diceHistory"></div>
+    <div style="display:flex; gap:4px; margin-top:12px;">
+        <button type="button" id="btnToggleDiceHistory" style="flex:1; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); border-radius:4px; color:#aaa; font-family:'Courier Prime',monospace; font-size:11px; padding:6px; cursor:pointer; transition:background 0.2s;">Показать историю</button>
+        <button type="button" id="btnClearDiceHistory" style="background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); border-radius:4px; color:#aaa; font-size:11px; padding:6px 10px; cursor:pointer; transition:background 0.2s;" title="Очистить">🗑️</button>
+    </div>
+    <div class="dice-history" id="diceHistory" style="display:none; max-height:160px; overflow-y:auto; margin-top:8px;"></div>
 </div>
 
 <!-- Hidden file inputs for import & portrait -->
@@ -6030,6 +6034,12 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
     }
 
     let diceHistoryArr = [];
+    try {
+        diceHistoryArr = JSON.parse(localStorage.getItem('coc7e_dice_history')) || [];
+    } catch (e) {
+        diceHistoryArr = [];
+    }
+    let diceHistoryVisible = false;
     let diceMode = 'normal'; // 'normal' | 'bonus' | 'penalty'
 
     // Mode toggle buttons
@@ -6083,7 +6093,9 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
         `;
         // History
         diceHistoryArr.unshift({ roll: finalRoll, target, label: outcome.label, cls: outcome.cls, mode: diceMode });
-        if (diceHistoryArr.length > 8) diceHistoryArr.pop();
+        // Optional limit to prevent infinite growth, e.g. 500
+        if (diceHistoryArr.length > 500) diceHistoryArr.pop();
+        localStorage.setItem('coc7e_dice_history', JSON.stringify(diceHistoryArr));
         renderDiceHistory();
         // Session log
         const modeTag = diceMode !== 'normal' ? ` [${diceMode === 'bonus' ? '+' : '−'}]` : '';
@@ -6111,6 +6123,27 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
         diceHistory.innerHTML = diceHistoryArr.map(h =>
             `<div class="dice-hist-item"><span>цель ${h.target}%</span><span class="hnum">${h.roll}</span><span style="font-size:9px;opacity:0.8">${h.label}</span></div>`
         ).join('');
+    }
+    
+    // Initial render
+    renderDiceHistory();
+
+    const btnToggleHistory = document.getElementById('btnToggleDiceHistory');
+    const btnClearHistory = document.getElementById('btnClearDiceHistory');
+    if (btnToggleHistory) {
+        btnToggleHistory.addEventListener('click', () => {
+            diceHistoryVisible = !diceHistoryVisible;
+            diceHistory.style.display = diceHistoryVisible ? 'block' : 'none';
+            btnToggleHistory.textContent = diceHistoryVisible ? 'Скрыть историю' : 'Показать историю';
+        });
+    }
+    if (btnClearHistory) {
+        btnClearHistory.addEventListener('click', () => {
+            if (!confirm('Очистить историю бросков?')) return;
+            diceHistoryArr = [];
+            localStorage.setItem('coc7e_dice_history', '[]');
+            renderDiceHistory();
+        });
     }
 
     btnRoll.addEventListener('click', performRoll);
