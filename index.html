@@ -6091,12 +6091,6 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
             <div style="color:#888;font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:1px;">Цель ${target}% • ½ ${Math.floor(target/2)} • ⅕ ${Math.floor(target/5)}</div>
             ${detailHTML}
         `;
-        // History
-        diceHistoryArr.unshift({ roll: finalRoll, target, label: outcome.label, cls: outcome.cls, mode: diceMode });
-        // Optional limit to prevent infinite growth, e.g. 500
-        if (diceHistoryArr.length > 500) diceHistoryArr.pop();
-        localStorage.setItem('coc7e_dice_history', JSON.stringify(diceHistoryArr));
-        renderDiceHistory();
         // Session log
         const modeTag = diceMode !== 'normal' ? ` [${diceMode === 'bonus' ? '+' : '−'}]` : '';
         addLogEntry('roll', `d100 = <span class="log-val">${finalRoll}</span> / цель ${target}% → ${outcome.label}${modeTag}`);
@@ -6120,9 +6114,12 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
             diceHistory.innerHTML = '<div style="color:#444;font-family:Courier Prime,monospace;font-size:10px;text-align:center;padding:8px;">История пуста</div>';
             return;
         }
-        diceHistory.innerHTML = diceHistoryArr.map(h =>
-            `<div class="dice-hist-item"><span>цель ${h.target}%</span><span class="hnum">${h.roll}</span><span style="font-size:9px;opacity:0.8">${h.label}</span></div>`
-        ).join('');
+        diceHistory.innerHTML = diceHistoryArr.map(item => {
+            if (typeof item === 'object' && item.roll) {
+                return `<div class="dice-hist-item"><span>цель ${item.target}%</span><span class="hnum">${item.roll}</span><span style="font-size:9px;opacity:0.8">${item.label}</span></div>`;
+            }
+            return `<div class="dice-hist-item" style="justify-content: flex-start; gap: 8px;"><span>🎲</span> <span style="line-height:1.4">${item}</span></div>`;
+        }).join('');
     }
     
     // Initial render
@@ -6761,6 +6758,14 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
         const icons = { roll: '🎲', san: '🧠', combat: '⚔', note: '📝' };
         const now = new Date();
         const time = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+        
+        if (type === 'roll' && typeof diceHistoryArr !== 'undefined') {
+            diceHistoryArr.unshift(text);
+            if (diceHistoryArr.length > 500) diceHistoryArr.pop();
+            localStorage.setItem('coc7e_dice_history', JSON.stringify(diceHistoryArr));
+            if (typeof renderDiceHistory === 'function') renderDiceHistory();
+        }
+        
         sessionLog.unshift({ type, text, icon: icon || icons[type] || '•', time, id: Date.now() + Math.random() });
         if (sessionLog.length > 100) sessionLog.pop();
         renderSessionLog();
