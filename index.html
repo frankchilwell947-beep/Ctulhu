@@ -7413,13 +7413,10 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
             chaseTrack.innerHTML = '<div class="chase-empty">Добавьте участников погони. Преследуемые (красные) слева, преследователи (синие) справа.</div>';
             return;
         }
-        // Sort: pursued first, then pursuers
-        const sorted = [...chaseParticipants].sort((a, b) => {
-            if (a.role !== b.role) return a.role === 'pursued' ? -1 : 1;
-            return b.position - a.position;
-        });
+        // Sort strictly by position (highest position leading)
+        const sorted = [...chaseParticipants].sort((a, b) => b.position - a.position);
         chaseTrack.innerHTML = sorted.map((p, i) => {
-            const caught = p.role === 'pursuer' && p.position >= (chaseParticipants.find(x => x.role === 'pursued') || {position: 999}).position;
+            const caught = p.role === 'pursuer' && chaseParticipants.some(x => x.role === 'pursued' && p.position >= x.position);
             return `<div class="chase-slot ${p.role}${caught ? ' caught' : ''}" title="${p.name} (${p.role === 'pursued' ? 'преследуемый' : 'преследователь'})">
                 <span class="slot-pos">${p.role === 'pursued' ? '🏃' : '🕵'} ${p.position}м</span>
                 <span class="slot-name">${p.name}</span>
@@ -7481,18 +7478,18 @@ body.dark-mode .portrait-box { background: rgba(255,255,255,0.05) !important; bo
         if (!slot) return;
         const slots = Array.from(chaseTrack.querySelectorAll('.chase-slot'));
         const idx = slots.indexOf(slot);
-        const sorted = [...chaseParticipants].sort((a, b) => {
-            if (a.role !== b.role) return a.role === 'pursued' ? -1 : 1;
-            return b.position - a.position;
-        });
+        const sorted = [...chaseParticipants].sort((a, b) => b.position - a.position);
         const p = sorted[idx];
         if (!p) return;
-        const newName = prompt('Имя участника:', p.name);
-        if (newName && newName.trim()) {
+        const newName = prompt('Имя участника (оставьте пустым для удаления):', p.name);
+        if (newName === null) return;
+        if (newName.trim() === '') {
+            chaseParticipants.splice(chaseParticipants.indexOf(p), 1);
+        } else {
             p.name = newName.trim().substring(0, 20);
-            renderChase();
-            saveSheet();
         }
+        renderChase();
+        saveSheet();
     });
 
     /* ========================================================
